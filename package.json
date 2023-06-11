@@ -1,0 +1,114 @@
+{
+  "name": "greencode",
+  "displayName": "GreenCode",
+  "description": "Replacing code with the most power saving one.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:greencode.markDirtyCode",
+    "onCommand:greencode.cleanMarkedCode"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "keybindings": [
+      {
+        "command": "greencode.cleanCompleteCode",
+        "key": "ctrl+alt+g"
+      },
+      {
+        "command": "greencode.markDirtyCode",
+        "key": "shift+ctrl+alt+f"
+      },
+      {
+        "command": "greencode.deactivateMarkDirtyCode",
+        "key": "shift+ctrl+alt+d"
+      },
+      {
+        "command": "greencode.cleanMarkedCode",
+        "key": "ctrl+space"
+      },
+      {
+        "command": "greencode.connectToLocalhost",
+        "key": "ctrl+j"
+      }
+    ],
+    "commands": [
+      {
+        "command": "greencode.findSqlQueries",
+        "title": "GreenCode: Find all SQL queries"
+      },
+      {
+        "command": "greencode.connectToLocalhost",
+        "title": "GreenCode: Connect to localhost"
+      },
+      {
+        "command": "greencode.cleanMarkedCode",
+        "title": "GreenCode: Replace dirty code with green code"
+      },
+      {
+        "command": "greencode.markDirtyCode",
+        "title": "GreenCode: Activate the dirt seeker"
+      },
+      {
+        "command": "greencode.deactivateMarkDirtyCode",
+        "title": "GreenCode: Deactivate the dirt seeker"
+      },
+      {
+        "command": "greencode.cleanCompleteCode",
+        "title": "GreenCode: Replace all dirty code with green code"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.1",
+    "@types/mssql": "^8.1.2",
+    "@types/mysql": "^2.15.21",
+    "@types/node": "^16.18.12",
+    "@types/oracledb": "^5.2.5",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vscode/test-electron": "^2.2.0",
+    "eslint": "^8.28.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.1.0",
+    "typescript": "^4.9.3"
+  },
+  "dependencies": {
+    "@qoretechnologies/python-parser": "^0.4.10",
+    "@sqltools/base-driver": "^0.1.11",
+    "@sqltools/types": "^0.1.7",
+    "animate.css": "^4.1.1",
+    "antlr4ts": "^0.5.0-alpha.4",
+    "antlr4ts-cli": "^0.5.0-alpha.4",
+    "ast": "^1.0.7",
+    "astroid": "^0.0.1",
+    "dotenv": "^16.0.3",
+    "filbert": "^0.1.20",
+    "msnodesqlv8": "^3.0.1",
+    "mssql": "^9.1.1",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.1.2",
+    "node-sql-parser": "^4.7.0",
+    "openai": "^3.1.0",
+    "oracledb": "^5.5.0",
+    "parsing": "^2.3.0",
+    "python-ast": "^0.1.0",
+    "sql-parser-mistic": "^1.2.3",
+    "tree-sitter": "^0.20.1"
+  }
+}

@@ -1,0 +1,9 @@
+kako ugraditi novi element u greencodu (sql):
+
+1. dirtFinder.ts
+- ugraditi novu mark* funkciju
+
+2. primkeyhelper (ako potrebno)
+
+
+3.
