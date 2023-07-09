@@ -3,6 +3,35 @@ import * as primKeysHelper from "./primaryKeyHelper";
 import * as primKeysPlSqlHelper from "../plsql/primaryKeyHelper";
 import { Parser } from "node-sql-parser";
 
+interface BinaryExpr {
+  type: string;
+  operator: string;
+  left: {
+    type: string;
+    table: string;
+    column: string;
+  };
+  right: {
+    type: string;
+    table: string;
+    column: string;
+  };
+}
+
+interface Node {
+  table: any;
+  as: any;
+  join: any[];
+  on: BinaryExpr;
+}
+
+interface Table {
+  name: string;
+  alias?: string;
+}
+
+type Condition = string | BinaryExpr;
+
 export async function markSelectSQL(
   document: vscode.TextDocument,
   isLogged: boolean,
@@ -14,6 +43,28 @@ export async function markSelectSQL(
     return [];
   }
 
+  // const openai = require('openai');
+  // openai.apiKey = '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';
+
+  // async function gptAPIFunc(prompt: string) {
+  //   try {
+  //     const response = await openai.Completion.create({
+  //       engine: 'gpt-4.0-turbo',
+  //       prompt: prompt,
+  //       max_tokens: 60,
+  //     });
+
+  //     // Interpret the response in the context of your application.
+  //     // Replace the following with your own logic.
+  //     if (response.choices && response.choices[0] && response.choices[0].text.trim() !== '') {
+  //       return true;
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+
+  //   return false;
+  // }
   // let loginData;
   // if (isLogged) {
   //   loginData = loginData;
@@ -61,6 +112,10 @@ export async function markSelectSQL(
     decorations: vscode.DecorationOptions[],
     document: vscode.TextDocument
   ) {
+    if (!ast || ast === undefined) {
+      return;
+    }
+
     if (isCartesianProduct(ast) || isUnusedJoin(ast) || isCrossJoin(ast)) {
       let start = document.positionAt(text.indexOf(query));
       let end = document.positionAt(text.indexOf(query) + query.length);
@@ -71,13 +126,6 @@ export async function markSelectSQL(
       });
     }
   }
-
-  // function isCartesianProduct(ast: any): boolean {
-  //   if (ast.type === "select" && ast.from && ast.from.length > 1) {
-  //     return true;
-  //   }
-  //   return false;
-  // }
 
   function isUnusedJoin(ast: any): boolean {
     if (ast.type === "select" && ast.join) {
@@ -106,41 +154,113 @@ export async function markSelectSQL(
   }
 
   function isCartesianProduct(ast: any): boolean {
-    if (ast.type === "select" && ast.from && ast.from.length > 1) {
-      const fromTables = ast.from.map(
-        (fromNode: any) => fromNode.table || fromNode.as
-      );
-      const joinConditions = ast.from
-        .filter((fromNode: any) => fromNode.join)
-        .flatMap((fromNode: any) => extractJoinConditions(fromNode.join));
+    if (!ast || ast.type !== "select" || !ast.from || ast.from.length <= 1) {
+      return false;
+    }
 
-      if (!ast.where && joinConditions.length === 0) {
-        // If there's no WHERE clause or JOIN conditions, it's a Cartesian product
-        return true;
-      } else {
-        const conditions = ast.where ? extractWhereConditions(ast.where) : [];
-        conditions.push(...joinConditions);
-        const usedTables = new Set();
+    const fromTables: Table[] = [];
+    const joinConditions: any[] = [];
 
-        conditions.forEach((condition) => {
-          fromTables.forEach((table: string) => {
-            if (
-              condition.includes(`"${table}"`) ||
-              condition.includes(`'${table}'`)
-            ) {
-              usedTables.add(table);
-            }
-          });
+    function recurseThroughJoinAndFromNodes(node: Node) {
+      if (!node) {
+        return;
+      }
+
+      if (node.table || node.as) {
+        fromTables.push({
+          name: node.table,
+          alias: node.as || null,
         });
+      }
 
-        // If not all tables are used in WHERE or JOIN conditions, it's a Cartesian product
-        if (usedTables.size < fromTables.length) {
-          return true;
-        }
+      // Checking for join condition in the node
+      if (node.on) {
+        joinConditions.push(node.on);
+      }
+
+      if (node.join) {
+        const joins = Array.isArray(node.join) ? node.join : [node.join];
+
+        joins.forEach((joinNode) => {
+          if (joinNode.on) {
+            joinConditions.push(...extractJoinConditions(joinNode));
+          }
+          recurseThroughJoinAndFromNodes(joinNode.table);
+        });
+      }
+    }
+
+    ast.from.forEach((fromNode: Node) =>
+      recurseThroughJoinAndFromNodes(fromNode)
+    );
+
+    if (!ast.where && joinConditions.length === 0) {
+      return true;
+    } else {
+      const conditions: Condition[] = ast.where
+        ? extractWhereConditions(ast.where)
+        : [];
+      conditions.push(...joinConditions);
+      const usedTables = new Set<string>();
+
+      conditions.forEach((condition: Condition) => {
+        fromTables.forEach((table: Table) => {
+          // If condition is a BinaryExpr
+          if (
+            typeof condition === "object" &&
+            "left" in condition &&
+            "right" in condition
+          ) {
+            const conditionString = `${condition.left.table} ${condition.right.table}`;
+
+            if (
+              conditionString.includes(`${table.name}`) ||
+              conditionString.includes(`${table.name}`) ||
+              conditionString.includes(`${table.alias}`) ||
+              conditionString.includes(`${table.alias}`)
+            ) {
+              usedTables.add(table.name);
+            }
+          }
+          // If condition is a string
+          else if (
+            typeof condition === "string" &&
+            (condition.includes(`${table.name}`) ||
+              condition.includes(`${table.name}`) ||
+              condition.includes(`${table.alias}`) ||
+              condition.includes(`${table.alias}`))
+          ) {
+            usedTables.add(table.name);
+          }
+        });
+      });
+
+      // If not all tables are used in ON conditions, it's a Cartesian product
+      if (usedTables.size < fromTables.length) {
+        return true;
       }
     }
 
     return false;
+  }
+
+  function extractJoinConditions(joinNodeOrArray: any): string[] {
+    let conditions: string[] = [];
+
+    // Check if the input is an array, and if so, extract conditions from each join object in the array
+    if (Array.isArray(joinNodeOrArray)) {
+      joinNodeOrArray.forEach((joinObj) => {
+        if (joinObj.on) {
+          conditions.push(joinObj.on);
+        }
+      });
+    }
+    // If the input is not an array but a single join object, extract the condition from it
+    else if (joinNodeOrArray && joinNodeOrArray.on) {
+      conditions.push(joinNodeOrArray.on);
+    }
+
+    return conditions;
   }
 
   function extractWhereConditions(whereObj: any): string[] {
@@ -154,25 +274,6 @@ export async function markSelectSQL(
     if (whereObj.right) {
       conditions = conditions.concat(extractWhereConditions(whereObj.right));
     }
-    return conditions;
-  }
-
-  function extractJoinConditions(joinNodeOrArray: any): string[] {
-    let conditions: string[] = [];
-    
-    // Check if the input is an array, and if so, extract conditions from each join object in the array
-    if (Array.isArray(joinNodeOrArray)) {
-      joinNodeOrArray.forEach((joinObj) => {
-        if (joinObj.on) {
-          conditions.push(joinObj.on);
-        }
-      });
-    }
-    // If the input is not an array but a single join object, extract the condition from it
-    else if (joinNodeOrArray && joinNodeOrArray.on) {
-      conditions.push(joinNodeOrArray.on);
-    }
-    
     return conditions;
   }
 
@@ -233,8 +334,9 @@ export async function markSelectSQL(
     }
   }
 
+  // SELECT *
   let matchSqlStar;
-  const sqlStarStatements = /\bselect\s+\*\s+from\b/gim;
+  const sqlStarStatements = /\bselect\s+\*\s+(from|into)\b/gim;
   while ((matchSqlStar = sqlStarStatements.exec(text)) !== null) {
     decorations.push();
     const start = document.positionAt(matchSqlStar.index);
@@ -245,6 +347,24 @@ export async function markSelectSQL(
       hoverMessage: `Use column names instead of the "*" wildcard character.`,
     });
   }
+  // SELECT *
+
+  // UPDATE WITHOUT WHERE
+  let matchUpdate;
+  const updateStatement = /\bupdate\b\s+\b\w+\b\s+\bset\b\s+.+/gim;
+
+  while ((matchUpdate = updateStatement.exec(text)) !== null) {
+    if (!/\bwhere\b/i.test(matchUpdate[0])) {
+      const start = document.positionAt(matchUpdate.index);
+      const end = document.positionAt(updateStatement.lastIndex);
+
+      decorations.push({
+        range: new vscode.Range(start, end),
+        hoverMessage: `Avoid UPDATE statements without a WHERE clause.`,
+      });
+    }
+  }
+  // UPDATE WITHOUT WHERE
 
   let matchSqlStatements;
   const sqlStatements =
