@@ -1,5 +1,6 @@
 import * as oracledb from "oracledb";
 import * as conn from "./loginManager";
+import * as vscode from "vscode";
 
 oracledb.initOracleClient({
   libDir:
@@ -10,14 +11,37 @@ export async function openConnection(
   user: string,
   password: string,
   connectString: string
-) {
-  const connection = await oracledb.getConnection({
-    user,
-    password,
-    connectString,
-  });
-  return connection;
+): Promise<oracledb.Connection> {
+  try {
+    const connectionPromise = oracledb.getConnection({
+      user,
+      password,
+      connectString,
+    });
+
+    const timeoutPromise = new Promise((_, reject) => {
+      const id = setTimeout(() => {
+        clearTimeout(id);
+        reject(new Error('Connection attempt timed out after 5 seconds'));
+      }, 5000);
+    });
+
+    const connection = await Promise.race([connectionPromise, timeoutPromise]) as oracledb.Connection;
+
+    return connection;
+  } catch (err) {
+    await vscode.window.showErrorMessage(
+      "Error connecting to the database. Please reload the window to retry.",
+      "Reload Window"
+    ).then(selection => {
+      if (selection === "Reload Window") {
+        vscode.commands.executeCommand("workbench.action.reloadWindow");
+      }
+    });
+    throw err; // It's important to re-throw the error to avoid proceeding with execution in case of failure
+  }
 }
+
 
 export async function findPrimaryKeys(
   uniqueTableNames: string[]
@@ -45,7 +69,7 @@ export async function findPrimaryKeys(
     .map((name) => `:${name}`)
     .join(", ");
 
-  const result = await connection.execute(
+  const result = await connection!.execute(
     `SELECT ind.index_name, ind.table_name, cols.column_name
      FROM user_indexes ind, user_ind_columns cols
      WHERE ind.index_name = cols.index_name

@@ -11,7 +11,7 @@
   ],
   "activationEvents": [
     "onCommand:greencode.markDirtyCode",
-    "onCommand:greencode.cleanMarkedCode"
+    "onCommand:deactivateMarkDirtyCode"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -35,6 +35,9 @@
       {
         "command": "greencode.connectToLocalhost",
         "key": "ctrl+j"
+      },
+      {
+        "command": "greencode.promptLoginData"
       }
     ],
     "commands": [

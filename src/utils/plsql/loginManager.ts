@@ -19,7 +19,6 @@ export async function getLoginDataPlSql() {
   });
 
   if (!user || !password || !connectionString) {
-    vscode.window.showErrorMessage("Missing input");
     return undefined;
   }
 

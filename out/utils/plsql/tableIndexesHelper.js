@@ -3,16 +3,34 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkExistingIndexes = exports.findIndexCandidates = exports.findPrimaryKeys = exports.openConnection = void 0;
 const oracledb = require("oracledb");
 const conn = require("./loginManager");
+const vscode = require("vscode");
 oracledb.initOracleClient({
     libDir: "C:\\Users\\dario\\Downloads\\instantclient-basic-windows.x64-21.10.0.0.0dbru\\instantclient_21_10",
 });
 async function openConnection(user, password, connectString) {
-    const connection = await oracledb.getConnection({
-        user,
-        password,
-        connectString,
-    });
-    return connection;
+    try {
+        const connectionPromise = oracledb.getConnection({
+            user,
+            password,
+            connectString,
+        });
+        const timeoutPromise = new Promise((_, reject) => {
+            const id = setTimeout(() => {
+                clearTimeout(id);
+                reject(new Error('Connection attempt timed out after 5 seconds'));
+            }, 5000);
+        });
+        const connection = await Promise.race([connectionPromise, timeoutPromise]);
+        return connection;
+    }
+    catch (err) {
+        await vscode.window.showErrorMessage("Error connecting to the database. Please reload the window to retry.", "Reload Window").then(selection => {
+            if (selection === "Reload Window") {
+                vscode.commands.executeCommand("workbench.action.reloadWindow");
+            }
+        });
+        throw err; // It's important to re-throw the error to avoid proceeding with execution in case of failure
+    }
 }
 exports.openConnection = openConnection;
 async function findPrimaryKeys(uniqueTableNames) {

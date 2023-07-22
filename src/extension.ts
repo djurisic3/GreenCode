@@ -156,17 +156,49 @@ export async function activate(context: vscode.ExtensionContext) {
   });
 
   if (!serverType) {
+    await vscode.window
+      .showErrorMessage(
+        "Missing server type. Extension activation aborted. Please reload to retry.",
+        "Reload Window"
+      )
+      .then((selection) => {
+        if (selection === "Reload Window") {
+          vscode.commands.executeCommand("workbench.action.reloadWindow");
+        }
+      });
     return;
   }
 
   if (serverType === "Oracle (PL/SQL)") {
     loginData = await getLoginDataPlSql();
+    if (!loginData || loginData === undefined) {
+      await vscode.window
+        .showErrorMessage(
+          "Missing login data. Extension activation aborted. Please reload to retry.",
+          "Reload Window"
+        )
+        .then((selection) => {
+          if (selection === "Reload Window") {
+            vscode.commands.executeCommand("workbench.action.reloadWindow");
+          }
+        });
+      return;
+    }
   } else if (serverType === "MySQL") {
     loginData = await getLoginDataMySql();
-  }
-
-  if (!loginData) {
-    return;
+    if (!loginData || loginData === undefined) {
+      await vscode.window
+        .showErrorMessage(
+          "Missing login data. Extension activation aborted. Please reload to retry.",
+          "Reload Window"
+        )
+        .then((selection) => {
+          if (selection === "Reload Window") {
+            vscode.commands.executeCommand("workbench.action.reloadWindow");
+          }
+        });
+      return;
+    }
   }
 
   context.subscriptions.push(disposableFindAllQueries);
@@ -249,11 +281,10 @@ export async function activate(context: vscode.ExtensionContext) {
         pyCode.csvCursorReplacement(csvHoverProvider);
         pyCode.forCursorReplacement(forHoverProvider);
         pyCode.miscellaneousReplacement(miscHoverProvider);
-        if (serverType === "MySQL"){
-        mysqlCode.sqlImplicitJoinCursorReplacement(sqlImplicitHoverProvider);
-        mysqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
-        }
-        else if (serverType === "Oracle (PL/SQL)") {
+        if (serverType === "MySQL") {
+          mysqlCode.sqlImplicitJoinCursorReplacement(sqlImplicitHoverProvider);
+          mysqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
+        } else if (serverType === "Oracle (PL/SQL)") {
           plsqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
         }
       }
@@ -283,12 +314,20 @@ export async function activate(context: vscode.ExtensionContext) {
   let disposableMarkDirtyCode = vscode.commands.registerCommand(
     "greencode.markDirtyCode",
     () => {
+      if (!serverType || !loginData) {
+        vscode.window.showErrorMessage(
+          "Missing server type or login data. Please provide this information and try again."
+        );
+      } else {
+        updateDecorationsSql();
+      }
       updateDecorationsForLoop(),
         updateDecorationsCsv(),
-        updateDecorationsMiscellaneous(),
-        updateDecorationsSql();
+        updateDecorationsMiscellaneous();
     }
   );
+
+  context.subscriptions.push(disposableMarkDirtyCode);
 
   let disposableDeactivateMarkDirtyCode = vscode.commands.registerCommand(
     "greencode.deactivateMarkDirtyCode",
@@ -300,7 +339,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(disposableMarkDirtyCode);
+  // context.subscriptions.push(disposableMarkDirtyCode);
   context.subscriptions.push(disposableDeactivateMarkDirtyCode);
   context.subscriptions.push(disposableCleanMarkedCode);
   context.subscriptions.push(disposableCleanCompleteCode);

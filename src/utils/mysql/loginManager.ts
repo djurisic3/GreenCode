@@ -20,7 +20,6 @@ export async function getLoginDataMySql() {
   });
 
   if (!host || !user || !password || !database) {
-    vscode.window.showErrorMessage("Missing input");
     return undefined;
   }
 

@@ -115,16 +115,40 @@ async function activate(context) {
         placeHolder: "Choose the server type:",
     });
     if (!serverType) {
+        await vscode.window
+            .showErrorMessage("Missing server type. Extension activation aborted. Please reload to retry.", "Reload Window")
+            .then((selection) => {
+            if (selection === "Reload Window") {
+                vscode.commands.executeCommand("workbench.action.reloadWindow");
+            }
+        });
         return;
     }
     if (serverType === "Oracle (PL/SQL)") {
         loginData = await (0, loginManager_1.getLoginDataPlSql)();
+        if (!loginData || loginData === undefined) {
+            await vscode.window
+                .showErrorMessage("Missing login data. Extension activation aborted. Please reload to retry.", "Reload Window")
+                .then((selection) => {
+                if (selection === "Reload Window") {
+                    vscode.commands.executeCommand("workbench.action.reloadWindow");
+                }
+            });
+            return;
+        }
     }
     else if (serverType === "MySQL") {
         loginData = await (0, loginManager_2.getLoginDataMySql)();
-    }
-    if (!loginData) {
-        return;
+        if (!loginData || loginData === undefined) {
+            await vscode.window
+                .showErrorMessage("Missing login data. Extension activation aborted. Please reload to retry.", "Reload Window")
+                .then((selection) => {
+                if (selection === "Reload Window") {
+                    vscode.commands.executeCommand("workbench.action.reloadWindow");
+                }
+            });
+            return;
+        }
     }
     context.subscriptions.push(disposableFindAllQueries);
     context.subscriptions.push(vscode.languages.registerHoverProvider("python", forHoverProvider));
@@ -199,18 +223,24 @@ async function activate(context) {
     });
     context.subscriptions.push(decorationTypeMiscellaneous);
     let disposableMarkDirtyCode = vscode.commands.registerCommand("greencode.markDirtyCode", () => {
+        if (!serverType || !loginData) {
+            vscode.window.showErrorMessage("Missing server type or login data. Please provide this information and try again.");
+        }
+        else {
+            updateDecorationsSql();
+        }
         updateDecorationsForLoop(),
             updateDecorationsCsv(),
-            updateDecorationsMiscellaneous(),
-            updateDecorationsSql();
+            updateDecorationsMiscellaneous();
     });
+    context.subscriptions.push(disposableMarkDirtyCode);
     let disposableDeactivateMarkDirtyCode = vscode.commands.registerCommand("greencode.deactivateMarkDirtyCode", () => {
         deactivateDecorationsForLoop(),
             deactivateDecorationsCsv(),
             deactivateDecorationsMiscellaneous(),
             deactivateDecorationsSql();
     });
-    context.subscriptions.push(disposableMarkDirtyCode);
+    // context.subscriptions.push(disposableMarkDirtyCode);
     context.subscriptions.push(disposableDeactivateMarkDirtyCode);
     context.subscriptions.push(disposableCleanMarkedCode);
     context.subscriptions.push(disposableCleanCompleteCode);

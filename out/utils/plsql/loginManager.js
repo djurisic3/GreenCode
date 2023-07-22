@@ -16,7 +16,6 @@ async function getLoginDataPlSql() {
         prompt: "Enter PL/SQL server and port",
     });
     if (!user || !password || !connectionString) {
-        vscode.window.showErrorMessage("Missing input");
         return undefined;
     }
     loginData = { user, password, connectionString };

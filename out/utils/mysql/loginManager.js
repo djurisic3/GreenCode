@@ -17,7 +17,6 @@ async function getLoginDataMySql() {
         prompt: "Enter MySQL database",
     });
     if (!host || !user || !password || !database) {
-        vscode.window.showErrorMessage("Missing input");
         return undefined;
     }
     loginData = { host, user, password, database };
