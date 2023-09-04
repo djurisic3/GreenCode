@@ -44,7 +44,7 @@ async function markSelectSQL(document, isLogged, loginData) {
     const parser = new node_sql_parser_1.Parser();
     let decorations = [];
     let text = document.getText();
-    let queries = text.split(";"); // split text by ';' to get individual queries
+    let queries = text.split(/;|\)/); // split text by ';' to get individual queries
     for (let query of queries) {
         let ast;
         try {
@@ -71,7 +71,7 @@ async function markSelectSQL(document, isLogged, loginData) {
             let end = document.positionAt(text.indexOf(query) + query.length);
             decorations.push({
                 range: new vscode.Range(start, end),
-                hoverMessage: "Possible Cartesian product or unused join. Please review the query for potential issues.",
+                hoverMessage: "Cartesian product or unused join detected. Please review the query for potential issues.",
             });
         }
     }
@@ -197,7 +197,7 @@ async function markSelectSQL(document, isLogged, loginData) {
     }
     let matchImplicitJoin;
     let matchWhere;
-    const implicitJoinRegex = /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
+    const implicitJoinRegex = /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*\)?\s*$/gim;
     while ((matchImplicitJoin = implicitJoinRegex.exec(text)) !== null) {
         if (matchImplicitJoin[13] === undefined) {
             matchWhere = "";
@@ -237,7 +237,7 @@ async function markSelectSQL(document, isLogged, loginData) {
         const end = document.positionAt(sqlStarStatements.lastIndex);
         decorations.push({
             range: new vscode.Range(start, end),
-            hoverMessage: `Use column names instead of the "*" wildcard character.`,
+            hoverMessage: `Use column names instead of the "*" wildcard character.   \nYou can save up to 40% in energy per statement call when using only relevant columns.`,
         });
     }
     // SELECT *

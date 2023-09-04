@@ -84,7 +84,7 @@ export async function markSelectSQL(
   let decorations: vscode.DecorationOptions[] = [];
   let text = document.getText();
 
-  let queries: string[] = text.split(";"); // split text by ';' to get individual queries
+  let queries: string[] = text.split(/;|\)/); // split text by ';' to get individual queries
 
   for (let query of queries) {
     let ast;
@@ -122,7 +122,7 @@ export async function markSelectSQL(
       decorations.push({
         range: new vscode.Range(start, end),
         hoverMessage:
-          "Possible Cartesian product or unused join. Please review the query for potential issues.",
+          "Cartesian product or unused join detected. Please review the query for potential issues.",
       });
     }
   }
@@ -280,7 +280,7 @@ export async function markSelectSQL(
   let matchImplicitJoin;
   let matchWhere: string;
   const implicitJoinRegex =
-    /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
+    /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*\)?\s*$/gim;
 
   while ((matchImplicitJoin = implicitJoinRegex.exec(text)) !== null) {
     if (matchImplicitJoin[13] === undefined) {
@@ -344,7 +344,7 @@ export async function markSelectSQL(
 
     decorations.push({
       range: new vscode.Range(start, end),
-      hoverMessage: `Use column names instead of the "*" wildcard character.`,
+      hoverMessage: `Use column names instead of the "*" wildcard character.   \nYou can save up to 40% in energy per statement call when using only relevant columns.`,
     });
   }
   // SELECT *

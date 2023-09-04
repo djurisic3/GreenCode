@@ -12,6 +12,7 @@ import {
   sqlImplicitJoinHover,
   sqlExplicitJoinHover,
 } from "./utils/mysql/hoverProvider";
+import { sqlExplicitJoinHover as plsqlExplicitJoinHover } from "./utils/plsql/hoverProvider";
 import * as sqlFileSearch from "./utils/mysql/sqlFileSearch";
 
 let decorationTypeForLoop: vscode.TextEditorDecorationType;
@@ -105,6 +106,7 @@ export async function activate(context: vscode.ExtensionContext) {
   let miscHoverProvider = new hover.MiscHover();
   let sqlImplicitHoverProvider = new sqlImplicitJoinHover();
   let sqlExplicitHoverProvider = new sqlExplicitJoinHover();
+  let plsqlExplicitHoverProvider = new plsqlExplicitJoinHover();
 
   const disposableFindAllQueries = vscode.commands.registerCommand(
     "greencode.findSqlQueries",
@@ -170,6 +172,9 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   if (serverType === "Oracle (PL/SQL)") {
+    context.subscriptions.push(
+      vscode.languages.registerHoverProvider("sql", plsqlExplicitHoverProvider)
+    );
     loginData = await getLoginDataPlSql();
     if (!loginData || loginData === undefined) {
       await vscode.window
@@ -182,9 +187,22 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.commands.executeCommand("workbench.action.reloadWindow");
           }
         });
+      context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+          "sql",
+          plsqlExplicitHoverProvider
+        )
+      );
       return;
     }
   } else if (serverType === "MySQL") {
+    context.subscriptions.push(
+      vscode.languages.registerHoverProvider("sql", sqlImplicitHoverProvider)
+    );
+
+    context.subscriptions.push(
+      vscode.languages.registerHoverProvider("sql", sqlExplicitHoverProvider)
+    );
     loginData = await getLoginDataMySql();
     if (!loginData || loginData === undefined) {
       await vscode.window
@@ -213,14 +231,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.languages.registerHoverProvider("python", miscHoverProvider)
-  );
-
-  context.subscriptions.push(
-    vscode.languages.registerHoverProvider("sql", sqlImplicitHoverProvider)
-  );
-
-  context.subscriptions.push(
-    vscode.languages.registerHoverProvider("sql", sqlExplicitHoverProvider)
   );
 
   let disposableCleanCompleteCode = vscode.commands.registerCommand(

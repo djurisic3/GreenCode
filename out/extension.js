@@ -12,6 +12,7 @@ const plsqlCode = require("./utils/plsql/codeReplacement");
 const loginManager_1 = require("./utils/plsql/loginManager");
 const loginManager_2 = require("./utils/mysql/loginManager");
 const hoverProvider_1 = require("./utils/mysql/hoverProvider");
+const hoverProvider_2 = require("./utils/plsql/hoverProvider");
 const sqlFileSearch = require("./utils/mysql/sqlFileSearch");
 let decorationTypeForLoop;
 let decorationTypeCsv;
@@ -87,6 +88,7 @@ async function activate(context) {
     let miscHoverProvider = new hover.MiscHover();
     let sqlImplicitHoverProvider = new hoverProvider_1.sqlImplicitJoinHover();
     let sqlExplicitHoverProvider = new hoverProvider_1.sqlExplicitJoinHover();
+    let plsqlExplicitHoverProvider = new hoverProvider_2.sqlExplicitJoinHover();
     const disposableFindAllQueries = vscode.commands.registerCommand("greencode.findSqlQueries", async () => {
         const options = {
             canSelectFiles: false,
@@ -125,6 +127,7 @@ async function activate(context) {
         return;
     }
     if (serverType === "Oracle (PL/SQL)") {
+        context.subscriptions.push(vscode.languages.registerHoverProvider("sql", plsqlExplicitHoverProvider));
         loginData = await (0, loginManager_1.getLoginDataPlSql)();
         if (!loginData || loginData === undefined) {
             await vscode.window
@@ -134,10 +137,13 @@ async function activate(context) {
                     vscode.commands.executeCommand("workbench.action.reloadWindow");
                 }
             });
+            context.subscriptions.push(vscode.languages.registerHoverProvider("sql", plsqlExplicitHoverProvider));
             return;
         }
     }
     else if (serverType === "MySQL") {
+        context.subscriptions.push(vscode.languages.registerHoverProvider("sql", sqlImplicitHoverProvider));
+        context.subscriptions.push(vscode.languages.registerHoverProvider("sql", sqlExplicitHoverProvider));
         loginData = await (0, loginManager_2.getLoginDataMySql)();
         if (!loginData || loginData === undefined) {
             await vscode.window
@@ -154,8 +160,6 @@ async function activate(context) {
     context.subscriptions.push(vscode.languages.registerHoverProvider("python", forHoverProvider));
     context.subscriptions.push(vscode.languages.registerHoverProvider("python", csvHoverProvider));
     context.subscriptions.push(vscode.languages.registerHoverProvider("python", miscHoverProvider));
-    context.subscriptions.push(vscode.languages.registerHoverProvider("sql", sqlImplicitHoverProvider));
-    context.subscriptions.push(vscode.languages.registerHoverProvider("sql", sqlExplicitHoverProvider));
     let disposableCleanCompleteCode = vscode.commands.registerCommand("greencode.cleanCompleteCode", () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {

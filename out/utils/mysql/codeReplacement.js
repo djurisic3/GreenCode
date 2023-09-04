@@ -19,7 +19,9 @@ async function sqlImplicitJoinCursorReplacement(currentSqlHover) {
     };
     let matchImplicitJoin;
     let matchWhere;
-    const implicitJoinRegex = /\bSELECT\b[ \t]+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b[ \t]+((\w+(\.\w+)?)([ \t]+(AS[ \t]+)?\w+)?([ \t]*,[ \t]*(\w+(\.\w+)?)([ \t]+(AS[ \t]+)?\w+)?)*)([ \t]+(WHERE[ \t]+((\w+(\.\w+)?[ \t]*=[ \t]*\w+(\.\w+)?)([ \t]+(AND|OR)[ \t]+(\w+(\.\w+)?[ \t]*=[ \t]*\w+(\.\w+)?))*))?)([ \t]*;)?[ \t]*$/gim;
+    const implicitJoinRegex = 
+    ///\bSELECT\b[ \t]+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b[ \t]+((\w+(\.\w+)?)([ \t]+(AS[ \t]+)?\w+)?([ \t]*,[ \t]*(\w+(\.\w+)?)([ \t]+(AS[ \t]+)?\w+)?)*)([ \t]+(WHERE[ \t]+((\w+(\.\w+)?[ \t]*=[ \t]*\w+(\.\w+)?)([ \t]+(AND|OR)[ \t]+(\w+(\.\w+)?[ \t]*=[ \t]*\w+(\.\w+)?))*))?)([ \t]*;)?[ \t]*$/gim;
+    /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
     const position = editor.selection.active;
     let implicitJoinCursorAndRange = cursor.isCursorOnImpJoin(position);
     if (!implicitJoinCursorAndRange) {
