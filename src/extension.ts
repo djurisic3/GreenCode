@@ -12,14 +12,20 @@ import {
   sqlImplicitJoinHover,
   sqlExplicitJoinHover,
 } from "./utils/mysql/hoverProvider";
-import { sqlExplicitJoinHover as plsqlExplicitJoinHover } from "./utils/plsql/hoverProvider";
+import {
+  sqlExplicitJoinHover as plsqlExplicitJoinHover,
+  sqlImplicitJoinHover as plsqlImplicitJoinHover,
+} from "./utils/plsql/hoverProvider";
 import * as sqlFileSearch from "./utils/mysql/sqlFileSearch";
+import * as criticalDirt from "./utils/mysql/dirtFinderCritical";
 
 let decorationTypeForLoop: vscode.TextEditorDecorationType;
 let decorationTypeCsv: vscode.TextEditorDecorationType;
 let decorationTypeSql: vscode.TextEditorDecorationType;
+let decorationTypeSqlCritical: vscode.TextEditorDecorationType;
 let decorationTypeMiscellaneous: vscode.TextEditorDecorationType;
 let activeEditor: vscode.TextEditor | undefined;
+let sqlDecorationLevel: number;
 
 function updateDecorationsForLoop() {
   activeEditor = vscode.window.activeTextEditor;
@@ -53,6 +59,11 @@ async function updateDecorationsSql() {
   if (!activeEditor) {
     return;
   }
+
+  const selectStarDecoration = criticalDirt.findSelectAsteriskStatements(activeEditor.document);
+
+  activeEditor.setDecorations(decorationTypeSqlCritical,selectStarDecoration);
+
   let isLogged = false;
   let decorations = await sqlFinder.markSelectSQL(
     activeEditor.document,
@@ -94,6 +105,15 @@ function deactivateDecorationsSql() {
   activeEditor.setDecorations(decorationTypeSql, []);
 }
 
+function deactivateDecorationsSqlCritical() {
+  activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  activeEditor.setDecorations(decorationTypeSqlCritical, []);
+  activeEditor.setDecorations(decorationTypeSql, []);
+}
+
 let serverType: string | undefined;
 let loginData:
   | { host: string; user: string; password: string; database: string }
@@ -107,6 +127,7 @@ export async function activate(context: vscode.ExtensionContext) {
   let sqlImplicitHoverProvider = new sqlImplicitJoinHover();
   let sqlExplicitHoverProvider = new sqlExplicitJoinHover();
   let plsqlExplicitHoverProvider = new plsqlExplicitJoinHover();
+  let plsqlImplicitHoverProvider = new plsqlImplicitJoinHover();
 
   const disposableFindAllQueries = vscode.commands.registerCommand(
     "greencode.findSqlQueries",
@@ -153,33 +174,20 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  serverType = await vscode.window.showQuickPick(["Oracle (PL/SQL)", "MySQL"], {
-    placeHolder: "Choose the server type:",
-  });
+  activeEditor = vscode.window.activeTextEditor;
 
-  if (!serverType) {
-    await vscode.window
-      .showErrorMessage(
-        "Missing server type. Extension activation aborted. Please reload to retry.",
-        "Reload Window"
-      )
-      .then((selection) => {
-        if (selection === "Reload Window") {
-          vscode.commands.executeCommand("workbench.action.reloadWindow");
-        }
-      });
-    return;
-  }
-
-  if (serverType === "Oracle (PL/SQL)") {
-    context.subscriptions.push(
-      vscode.languages.registerHoverProvider("sql", plsqlExplicitHoverProvider)
+  if (activeEditor?.document.languageId !== "python") {
+    serverType = await vscode.window.showQuickPick(
+      ["Oracle (PL/SQL)", "MySQL"],
+      {
+        placeHolder: "Choose the server type:",
+      }
     );
-    loginData = await getLoginDataPlSql();
-    if (!loginData || loginData === undefined) {
+
+    if (!serverType) {
       await vscode.window
         .showErrorMessage(
-          "Missing login data. Extension activation aborted. Please reload to retry.",
+          "Missing server type. Extension activation aborted. Please reload to retry.",
           "Reload Window"
         )
         .then((selection) => {
@@ -187,35 +195,64 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.commands.executeCommand("workbench.action.reloadWindow");
           }
         });
+      return;
+    }
+
+    if (serverType === "Oracle (PL/SQL)") {
       context.subscriptions.push(
         vscode.languages.registerHoverProvider(
           "sql",
           plsqlExplicitHoverProvider
         )
       );
-      return;
-    }
-  } else if (serverType === "MySQL") {
-    context.subscriptions.push(
-      vscode.languages.registerHoverProvider("sql", sqlImplicitHoverProvider)
-    );
-
-    context.subscriptions.push(
-      vscode.languages.registerHoverProvider("sql", sqlExplicitHoverProvider)
-    );
-    loginData = await getLoginDataMySql();
-    if (!loginData || loginData === undefined) {
-      await vscode.window
-        .showErrorMessage(
-          "Missing login data. Extension activation aborted. Please reload to retry.",
-          "Reload Window"
+      context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+          "sql",
+          plsqlImplicitHoverProvider
         )
-        .then((selection) => {
-          if (selection === "Reload Window") {
-            vscode.commands.executeCommand("workbench.action.reloadWindow");
-          }
-        });
-      return;
+      );
+      loginData = await getLoginDataPlSql();
+      if (!loginData || loginData === undefined) {
+        await vscode.window
+          .showErrorMessage(
+            "Missing login data. Extension activation aborted. Please reload to retry.",
+            "Reload Window"
+          )
+          .then((selection) => {
+            if (selection === "Reload Window") {
+              vscode.commands.executeCommand("workbench.action.reloadWindow");
+            }
+          });
+        context.subscriptions.push(
+          vscode.languages.registerHoverProvider(
+            "sql",
+            plsqlExplicitHoverProvider
+          )
+        );
+        return;
+      }
+    } else if (serverType === "MySQL") {
+      context.subscriptions.push(
+        vscode.languages.registerHoverProvider("sql", sqlImplicitHoverProvider)
+      );
+
+      context.subscriptions.push(
+        vscode.languages.registerHoverProvider("sql", sqlExplicitHoverProvider)
+      );
+      loginData = await getLoginDataMySql();
+      if (!loginData || loginData === undefined) {
+        await vscode.window
+          .showErrorMessage(
+            "Missing login data. Extension activation aborted. Please reload to retry.",
+            "Reload Window"
+          )
+          .then((selection) => {
+            if (selection === "Reload Window") {
+              vscode.commands.executeCommand("workbench.action.reloadWindow");
+            }
+          });
+        return;
+      }
     }
   }
 
@@ -264,7 +301,7 @@ export async function activate(context: vscode.ExtensionContext) {
   let disposableCleanMarkedCode = vscode.commands.registerCommand(
     "greencode.cleanMarkedCode",
     () => {
-      if (!serverType) {
+      if (!serverType && activeEditor?.document.languageId === "sql") {
         vscode.window.showErrorMessage(
           "Server type is not defined yet. Please wait a moment and try again."
         );
@@ -281,13 +318,26 @@ export async function activate(context: vscode.ExtensionContext) {
         sqlImplicitHoverProvider.currentImplicitSql !== undefined &&
         serverType === "MySQL"
       ) {
-        mysqlCode.sqlImplicitJoinCursorReplacement(sqlImplicitHoverProvider);
+        mysqlCode.sqlImplicitJoinHoverReplacement(sqlImplicitHoverProvider);
       } else if (
         sqlExplicitHoverProvider.currentExplicitSql !== undefined &&
         serverType === "MySQL"
       ) {
-        mysqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
-      } else {
+        mysqlCode.sqlExplicitJoinHoverReplacement(sqlExplicitHoverProvider);
+      } else if (
+        plsqlImplicitHoverProvider.currentImplicitSql !== undefined &&
+        serverType === "Oracle (PL/SQL)"
+      ) {
+        plsqlCode.sqlImplicitJoinHoverReplacement(plsqlImplicitHoverProvider);
+      } 
+      else if (
+        plsqlExplicitHoverProvider.currentExplicitSql !== undefined &&
+        serverType === "Oracle (PL/SQL)"
+      ) {
+        plsqlCode.sqlExplicitJoinHoverReplacement(plsqlExplicitHoverProvider);
+      }
+      
+      else {
         pyCode.csvCursorReplacement(csvHoverProvider);
         pyCode.forCursorReplacement(forHoverProvider);
         pyCode.miscellaneousReplacement(miscHoverProvider);
@@ -296,6 +346,7 @@ export async function activate(context: vscode.ExtensionContext) {
           mysqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
         } else if (serverType === "Oracle (PL/SQL)") {
           plsqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
+          plsqlCode.sqlImplicitJoinCursorReplacement(sqlImplicitHoverProvider);
         }
       }
     }
@@ -307,9 +358,14 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(decorationTypeForLoop);
 
   decorationTypeSql = vscode.window.createTextEditorDecorationType({
-    textDecoration: "underline dashed red",
+    textDecoration: "underline dashed orange",
   });
   context.subscriptions.push(decorationTypeSql);
+
+  decorationTypeSqlCritical = vscode.window.createTextEditorDecorationType({
+    textDecoration: "underline dashed red"
+  })
+  context.subscriptions.push(decorationTypeSqlCritical);
 
   decorationTypeCsv = vscode.window.createTextEditorDecorationType({
     textDecoration: "underline wavy orange",
@@ -324,12 +380,16 @@ export async function activate(context: vscode.ExtensionContext) {
   let disposableMarkDirtyCode = vscode.commands.registerCommand(
     "greencode.markDirtyCode",
     () => {
-      if (!serverType || !loginData) {
+      if (
+        (!serverType || !loginData) &&
+        activeEditor?.document.languageId === "sql"
+      ) {
         vscode.window.showErrorMessage(
           "Missing server type or login data. Please provide this information and try again."
         );
       } else {
         updateDecorationsSql();
+        
       }
       updateDecorationsForLoop(),
         updateDecorationsCsv(),
@@ -346,6 +406,7 @@ export async function activate(context: vscode.ExtensionContext) {
         deactivateDecorationsCsv(),
         deactivateDecorationsMiscellaneous(),
         deactivateDecorationsSql();
+        deactivateDecorationsSqlCritical();
     }
   );
 

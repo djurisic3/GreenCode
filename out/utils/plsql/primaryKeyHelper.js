@@ -1,7 +1,72 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkExplicitPrimKeys = void 0;
+exports.checkExplicitPrimKeys = exports.checkImplicitPrimKeys = void 0;
 const tableIndexesHelper_1 = require("./tableIndexesHelper");
+const queryHelper = require("../plsql/tableIndexesHelper");
+async function checkImplicitPrimKeys(credentials, implicitJoinMatch, matchWhere) {
+    let isValidSql;
+    let isPrimaryKeyAbsent = false;
+    if (matchWhere === "") {
+        isPrimaryKeyAbsent = true;
+        isValidSql = true;
+    }
+    let tableNamesStr = implicitJoinMatch[2] ?? implicitJoinMatch[4];
+    const tableNames = tableNamesStr.split(",");
+    isValidSql = true;
+    for (const tableName of tableNames) {
+        const tableNameParts = tableName.trim().split(/[.\s]+/);
+        const lastElementTableDef = tableNameParts[tableNameParts.length - 1];
+        const tableNameOrAliasRegex = new RegExp(`\\b${lastElementTableDef}\\b`, "gmi");
+        if (!tableNameOrAliasRegex.test(matchWhere)) {
+            isValidSql = false;
+            break;
+        }
+    }
+    const tableAliasMap = new Map();
+    const processedTableNames = tableNames.map((tableName) => {
+        const tableNameParts = tableName.trim().split(/[.\s]+/);
+        const alias = tableNameParts.length > 1
+            ? tableNameParts[tableNameParts.length - 1]
+            : "";
+        const actualTableName = tableName.includes(".")
+            ? tableNameParts[1]
+            : tableNameParts[0];
+        if (alias) {
+            tableAliasMap.set(alias, actualTableName);
+        }
+        return actualTableName;
+    });
+    const primaryKeyMap = await queryHelper.findPrimaryKeys(processedTableNames);
+    // Create a string of table names and their corresponding primary keys
+    const tableInfo = processedTableNames
+        .map((tableName) => {
+        const primaryKeys = primaryKeyMap[tableName.toLocaleUpperCase()] ?? ["unknown"];
+        return `${tableName}: ${primaryKeys.join(", ")}`;
+    })
+        .join("   \n");
+    for (const tableName in primaryKeyMap) {
+        const primaryKeys = primaryKeyMap[tableName] ?? ["unknown"];
+        let allPrimaryKeysPresent = true;
+        primaryKeys.forEach((primaryKey) => {
+            const primaryKeyRegex = new RegExp(`\\b${primaryKey}\\b`, "gmi");
+            if (!primaryKeyRegex.test(matchWhere)) {
+                allPrimaryKeysPresent = false;
+            }
+        });
+        if (!allPrimaryKeysPresent) {
+            isPrimaryKeyAbsent = true;
+            break;
+        }
+    }
+    return [
+        tableInfo,
+        isPrimaryKeyAbsent,
+        isValidSql,
+        primaryKeyMap,
+        tableAliasMap,
+    ];
+}
+exports.checkImplicitPrimKeys = checkImplicitPrimKeys;
 async function checkExplicitPrimKeys(credentials, matchExplicitJoin, matchJoinOn) {
     let isValidSql;
     let isPrimaryKeyAbsent = false;
@@ -60,7 +125,7 @@ async function checkExplicitPrimKeys(credentials, matchExplicitJoin, matchJoinOn
         console.log('primaryKeys: ', primaryKeys);
         let allPrimaryKeysPresent = true;
         primaryKeys.forEach((primaryKey) => {
-            const table = allTablesOrAliases.get(tableName);
+            const table = allTablesOrAliases.get(tableName.toLocaleLowerCase());
             const primaryKeyRegex = new RegExp(`\\b${table}\\.${primaryKey}\\b`, "gmi");
             console.log("TABLE: " + table);
             console.log("PRIM KEY: " + primaryKey);

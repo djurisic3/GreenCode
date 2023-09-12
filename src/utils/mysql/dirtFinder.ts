@@ -79,203 +79,203 @@ export async function markSelectSQL(
   //   }
   // }
 
-  const parser = new Parser();
-
-  let decorations: vscode.DecorationOptions[] = [];
   let text = document.getText();
 
-  let queries: string[] = text.split(/;|\)/); // split text by ';' to get individual queries
+  let decorations: vscode.DecorationOptions[] = [];
+  // const parser = new Parser();
 
-  for (let query of queries) {
-    let ast;
+  // let queries: string[] = text.split(/;|\)/); // split text by ';' to get individual queries
 
-    try {
-      ast = parser.astify(query); // parse the query to get AST
-    } catch (error) {
-      // handle any parsing errors
-      console.error("Error parsing query: ", error);
-      continue;
-    }
+  // for (let query of queries) {
+  //   let ast;
 
-    if (Array.isArray(ast)) {
-      ast.forEach((node) =>
-        checkForCartesianProduct(node, query, decorations, document)
-      );
-    } else {
-      checkForCartesianProduct(ast, query, decorations, document);
-    }
-  }
+  //   try {
+  //     ast = parser.astify(query); // parse the query to get AST
+  //   } catch (error) {
+  //     // handle any parsing errors
+  //     console.error("Error parsing query: ", error);
+  //     continue;
+  //   }
 
-  function checkForCartesianProduct(
-    ast: any,
-    query: string,
-    decorations: vscode.DecorationOptions[],
-    document: vscode.TextDocument
-  ) {
-    if (!ast || ast === undefined) {
-      return;
-    }
+  //   if (Array.isArray(ast)) {
+  //     ast.forEach((node) =>
+  //       checkForCartesianProduct(node, query, decorations, document)
+  //     );
+  //   } else {
+  //     checkForCartesianProduct(ast, query, decorations, document);
+  //   }
+  // }
 
-    if (isCartesianProduct(ast) || isUnusedJoin(ast) || isCrossJoin(ast)) {
-      let start = document.positionAt(text.indexOf(query));
-      let end = document.positionAt(text.indexOf(query) + query.length);
-      decorations.push({
-        range: new vscode.Range(start, end),
-        hoverMessage:
-          "Cartesian product or unused join detected. Please review the query for potential issues.",
-      });
-    }
-  }
+  // function checkForCartesianProduct(
+  //   ast: any,
+  //   query: string,
+  //   decorations: vscode.DecorationOptions[],
+  //   document: vscode.TextDocument
+  // ) {
+  //   if (!ast || ast === undefined) {
+  //     return;
+  //   }
 
-  function isUnusedJoin(ast: any): boolean {
-    if (ast.type === "select" && ast.join) {
-      const joinTables = ast.join.map((joinNode: any) => joinNode.table);
-      const fromTables = ast.from.map((fromNode: any) => fromNode.table);
-      const unusedJoin = joinTables.some(
-        (joinTable: any) => !fromTables.includes(joinTable)
-      );
-      return unusedJoin;
-    }
-    return false;
-  }
+  //   if (isCartesianProduct(ast) || isUnusedJoin(ast) || isCrossJoin(ast)) {
+  //     let start = document.positionAt(text.indexOf(query));
+  //     let end = document.positionAt(text.indexOf(query) + query.length);
+  //     decorations.push({
+  //       range: new vscode.Range(start, end),
+  //       hoverMessage:
+  //         "Cartesian product or unused join detected. Please review the query for potential issues.",
+  //     });
+  //   }
+  // }
 
-  function isCrossJoin(ast: any): boolean {
-    if (
-      ast.type === "select" &&
-      ast.from &&
-      ast.from.length === 1 &&
-      ast.from[0].type === "table" &&
-      ast.from[0].join &&
-      ast.from[0].join[0].type === "cross"
-    ) {
-      return true;
-    }
-    return false;
-  }
+  // function isUnusedJoin(ast: any): boolean {
+  //   if (ast.type === "select" && ast.join) {
+  //     const joinTables = ast.join.map((joinNode: any) => joinNode.table);
+  //     const fromTables = ast.from.map((fromNode: any) => fromNode.table);
+  //     const unusedJoin = joinTables.some(
+  //       (joinTable: any) => !fromTables.includes(joinTable)
+  //     );
+  //     return unusedJoin;
+  //   }
+  //   return false;
+  // }
 
-  function isCartesianProduct(ast: any): boolean {
-    if (!ast || ast.type !== "select" || !ast.from || ast.from.length <= 1) {
-      return false;
-    }
+  // function isCrossJoin(ast: any): boolean {
+  //   if (
+  //     ast.type === "select" &&
+  //     ast.from &&
+  //     ast.from.length === 1 &&
+  //     ast.from[0].type === "table" &&
+  //     ast.from[0].join &&
+  //     ast.from[0].join[0].type === "cross"
+  //   ) {
+  //     return true;
+  //   }
+  //   return false;
+  // }
 
-    const fromTables: Table[] = [];
-    const joinConditions: any[] = [];
+  // function isCartesianProduct(ast: any): boolean {
+  //   if (!ast || ast.type !== "select" || !ast.from || ast.from.length <= 1) {
+  //     return false;
+  //   }
 
-    function recurseThroughJoinAndFromNodes(node: Node) {
-      if (!node) {
-        return;
-      }
+  //   const fromTables: Table[] = [];
+  //   const joinConditions: any[] = [];
 
-      if (node.table || node.as) {
-        fromTables.push({
-          name: node.table,
-          alias: node.as || null,
-        });
-      }
+  //   function recurseThroughJoinAndFromNodes(node: Node) {
+  //     if (!node) {
+  //       return;
+  //     }
 
-      // Checking for join condition in the node
-      if (node.on) {
-        joinConditions.push(node.on);
-      }
+  //     if (node.table || node.as) {
+  //       fromTables.push({
+  //         name: node.table,
+  //         alias: node.as || null,
+  //       });
+  //     }
 
-      if (node.join) {
-        const joins = Array.isArray(node.join) ? node.join : [node.join];
+  //     // Checking for join condition in the node
+  //     if (node.on) {
+  //       joinConditions.push(node.on);
+  //     }
 
-        joins.forEach((joinNode) => {
-          if (joinNode.on) {
-            joinConditions.push(...extractJoinConditions(joinNode));
-          }
-          recurseThroughJoinAndFromNodes(joinNode.table);
-        });
-      }
-    }
+  //     if (node.join) {
+  //       const joins = Array.isArray(node.join) ? node.join : [node.join];
 
-    ast.from.forEach((fromNode: Node) =>
-      recurseThroughJoinAndFromNodes(fromNode)
-    );
+  //       joins.forEach((joinNode) => {
+  //         if (joinNode.on) {
+  //           joinConditions.push(...extractJoinConditions(joinNode));
+  //         }
+  //         recurseThroughJoinAndFromNodes(joinNode.table);
+  //       });
+  //     }
+  //   }
 
-    if (!ast.where && joinConditions.length === 0) {
-      return true;
-    } else {
-      const conditions: Condition[] = ast.where
-        ? extractWhereConditions(ast.where)
-        : [];
-      conditions.push(...joinConditions);
-      const usedTables = new Set<string>();
+  //   ast.from.forEach((fromNode: Node) =>
+  //     recurseThroughJoinAndFromNodes(fromNode)
+  //   );
 
-      conditions.forEach((condition: Condition) => {
-        fromTables.forEach((table: Table) => {
-          // If condition is a BinaryExpr
-          if (
-            typeof condition === "object" &&
-            "left" in condition &&
-            "right" in condition
-          ) {
-            const conditionString = `${condition.left.table} ${condition.right.table}`;
+  //   if (!ast.where && joinConditions.length === 0) {
+  //     return true;
+  //   } else {
+  //     const conditions: Condition[] = ast.where
+  //       ? extractWhereConditions(ast.where)
+  //       : [];
+  //     conditions.push(...joinConditions);
+  //     const usedTables = new Set<string>();
 
-            if (
-              conditionString.includes(`${table.name}`) ||
-              conditionString.includes(`${table.name}`) ||
-              conditionString.includes(`${table.alias}`) ||
-              conditionString.includes(`${table.alias}`)
-            ) {
-              usedTables.add(table.name);
-            }
-          }
-          // If condition is a string
-          else if (
-            typeof condition === "string" &&
-            (condition.includes(`${table.name}`) ||
-              condition.includes(`${table.name}`) ||
-              condition.includes(`${table.alias}`) ||
-              condition.includes(`${table.alias}`))
-          ) {
-            usedTables.add(table.name);
-          }
-        });
-      });
+  //     conditions.forEach((condition: Condition) => {
+  //       fromTables.forEach((table: Table) => {
+  //         // If condition is a BinaryExpr
+  //         if (
+  //           typeof condition === "object" &&
+  //           "left" in condition &&
+  //           "right" in condition
+  //         ) {
+  //           const conditionString = `${condition.left.table} ${condition.right.table}`;
 
-      // If not all tables are used in ON conditions, it's a Cartesian product
-      if (usedTables.size < fromTables.length) {
-        return true;
-      }
-    }
+  //           if (
+  //             conditionString.includes(`${table.name}`) ||
+  //             conditionString.includes(`${table.name}`) ||
+  //             conditionString.includes(`${table.alias}`) ||
+  //             conditionString.includes(`${table.alias}`)
+  //           ) {
+  //             usedTables.add(table.name);
+  //           }
+  //         }
+  //         // If condition is a string
+  //         else if (
+  //           typeof condition === "string" &&
+  //           (condition.includes(`${table.name}`) ||
+  //             condition.includes(`${table.name}`) ||
+  //             condition.includes(`${table.alias}`) ||
+  //             condition.includes(`${table.alias}`))
+  //         ) {
+  //           usedTables.add(table.name);
+  //         }
+  //       });
+  //     });
 
-    return false;
-  }
+  //     // If not all tables are used in ON conditions, it's a Cartesian product
+  //     if (usedTables.size < fromTables.length) {
+  //       return true;
+  //     }
+  //   }
 
-  function extractJoinConditions(joinNodeOrArray: any): string[] {
-    let conditions: string[] = [];
+  //   return false;
+  // }
 
-    // Check if the input is an array, and if so, extract conditions from each join object in the array
-    if (Array.isArray(joinNodeOrArray)) {
-      joinNodeOrArray.forEach((joinObj) => {
-        if (joinObj.on) {
-          conditions.push(joinObj.on);
-        }
-      });
-    }
-    // If the input is not an array but a single join object, extract the condition from it
-    else if (joinNodeOrArray && joinNodeOrArray.on) {
-      conditions.push(joinNodeOrArray.on);
-    }
+  // function extractJoinConditions(joinNodeOrArray: any): string[] {
+  //   let conditions: string[] = [];
 
-    return conditions;
-  }
+  //   // Check if the input is an array, and if so, extract conditions from each join object in the array
+  //   if (Array.isArray(joinNodeOrArray)) {
+  //     joinNodeOrArray.forEach((joinObj) => {
+  //       if (joinObj.on) {
+  //         conditions.push(joinObj.on);
+  //       }
+  //     });
+  //   }
+  //   // If the input is not an array but a single join object, extract the condition from it
+  //   else if (joinNodeOrArray && joinNodeOrArray.on) {
+  //     conditions.push(joinNodeOrArray.on);
+  //   }
 
-  function extractWhereConditions(whereObj: any): string[] {
-    let conditions: string[] = [];
-    if (whereObj.condition) {
-      conditions.push(whereObj.condition);
-    }
-    if (whereObj.left) {
-      conditions = conditions.concat(extractWhereConditions(whereObj.left));
-    }
-    if (whereObj.right) {
-      conditions = conditions.concat(extractWhereConditions(whereObj.right));
-    }
-    return conditions;
-  }
+  //   return conditions;
+  // }
+
+  // function extractWhereConditions(whereObj: any): string[] {
+  //   let conditions: string[] = [];
+  //   if (whereObj.condition) {
+  //     conditions.push(whereObj.condition);
+  //   }
+  //   if (whereObj.left) {
+  //     conditions = conditions.concat(extractWhereConditions(whereObj.left));
+  //   }
+  //   if (whereObj.right) {
+  //     conditions = conditions.concat(extractWhereConditions(whereObj.right));
+  //   }
+  //   return conditions;
+  // }
 
   let matchImplicitJoin;
   let matchWhere: string;
@@ -331,22 +331,40 @@ export async function markSelectSQL(
           hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
         });
       }
+    } else if (isPlsqlLoginData(loginData)) {
+      const [tablePrimKeys, isPrimaryKeyAbsentExplicit, isValidExplicitSql] =
+        await primKeysPlSqlHelper.checkImplicitPrimKeys(
+          loginData,
+          matchImplicitJoin,
+          matchWhere
+        );
+      console.log("tablePrimKeys: " + tablePrimKeys);
+      console.log("isPrimaryKeyAbsentExplicit: " + isPrimaryKeyAbsentExplicit);
+      console.log("isValidExplicitSql: " + isValidExplicitSql);
+      if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
+        const start = document.positionAt(matchImplicitJoin.index);
+        const end = document.positionAt(implicitJoinRegex.lastIndex);
+        decorations.push({
+          range: new vscode.Range(start, end),
+          hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
+        });
+      }
     }
   }
 
   // SELECT *
-  let matchSqlStar;
-  const sqlStarStatements = /\bselect\s+\*\s+(from|into)\b/gim;
-  while ((matchSqlStar = sqlStarStatements.exec(text)) !== null) {
-    decorations.push();
-    const start = document.positionAt(matchSqlStar.index);
-    const end = document.positionAt(sqlStarStatements.lastIndex);
+  // let matchSqlStar;
+  // const sqlStarStatements = /\bselect\s+\*\s+(from|into)\b/gim;
+  // while ((matchSqlStar = sqlStarStatements.exec(text)) !== null) {
+  //   decorations.push();
+  //   const start = document.positionAt(matchSqlStar.index);
+  //   const end = document.positionAt(sqlStarStatements.lastIndex);
 
-    decorations.push({
-      range: new vscode.Range(start, end),
-      hoverMessage: `Use column names instead of the "*" wildcard character.   \nYou can save up to 40% in energy per statement call when using only relevant columns.`,
-    });
-  }
+  //   decorations.push({
+  //     range: new vscode.Range(start, end),
+  //     hoverMessage: `Use column names instead of the "*" wildcard character.   \nYou can save up to 40% in energy per statement call when using only relevant columns.`,
+  //   });
+  // }
   // SELECT *
 
   // UPDATE WITHOUT WHERE
@@ -481,6 +499,5 @@ export async function markSelectSQL(
       }
     }
   }
-
   return decorations;
 }
