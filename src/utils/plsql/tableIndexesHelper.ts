@@ -88,7 +88,7 @@ export async function findPrimaryKeys(
     for (let row of result.rows) {
       console.log("ROW HERE XXXXX: "+ row)
       const tableName = row.TABLE_NAME;
-      console.log("TABLENAME:  ", tableName)
+      console.log("TABLENAME:  ", row.TABLE_NAME)
       const columnName = row.COLUMN_NAME;
       if (!primaryKeyMap[tableName]) {
         primaryKeyMap[tableName] = [];
@@ -105,10 +105,11 @@ export async function findPrimaryKeys(
 export async function findIndexCandidates(
   tableColumns: { table: string; columnName: string }[]
 ): Promise<{ [tableName: string]: { [columnName: string]: number } }> {
+  let loginData = await conn.getLoginDataPlSql();
   const connection = await openConnection(
-    "system",
-    "m1d2e3j4",
-    "localhost:1521"
+    loginData?.user!,
+    loginData?.password!,
+    loginData?.connectionString!
   );
   const cardinalityMap: {
     [tableName: string]: { [columnName: string]: number };
@@ -139,10 +140,11 @@ export async function checkExistingIndexes(
   tableName: string,
   columnName: string
 ): Promise<boolean> {
+  let loginData = await conn.getLoginDataPlSql();
   const connection = await openConnection(
-    "system",
-    "m1d2e3j4",
-    "localhost:1521"
+    loginData?.user!,
+    loginData?.password!,
+    loginData?.connectionString!
   );
   const result = await connection.execute(
     `SELECT column_name

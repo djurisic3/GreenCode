@@ -4,19 +4,16 @@ exports.sqlExplicitJoinCursorReplacement = exports.sqlExplicitJoinHoverReplaceme
 const vscode = require("vscode");
 const cursor = require("./cursorHelper");
 const primaryKeyHelper_1 = require("./primaryKeyHelper");
+const loginManager_1 = require("./loginManager");
 async function sqlImplicitJoinHoverReplacement(currentSqlHover) {
     let replacedCode;
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         return;
     }
-    let loginData;
-    loginData = {
-        host: "localhost",
-        user: "root",
-        password: "m1d2e3j4",
-        database: "sakila",
-    };
+    const loginData = await (0, loginManager_1.getLoginDataMySql)();
+    if (!loginData)
+        return;
     let matchImplicitJoin;
     let matchWhere;
     const implicitJoinRegex = /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
@@ -77,13 +74,9 @@ async function sqlImplicitJoinCursorReplacement(currentSqlHover) {
     if (!editor) {
         return;
     }
-    let loginData;
-    loginData = {
-        host: "localhost",
-        user: "root",
-        password: "m1d2e3j4",
-        database: "sakila",
-    };
+    const loginData = await (0, loginManager_1.getLoginDataMySql)();
+    if (!loginData)
+        return;
     let matchImplicitJoin;
     let matchWhere;
     const implicitJoinRegex = 
@@ -159,13 +152,9 @@ async function sqlExplicitJoinHoverReplacement(currentSqlHover) {
     if (!editor) {
         return;
     }
-    let loginData;
-    loginData = {
-        host: "localhost",
-        user: "root",
-        password: "m1d2e3j4",
-        database: "sakila",
-    };
+    const loginData = await (0, loginManager_1.getLoginDataMySql)();
+    if (!loginData)
+        return;
     let matchExplicitJoin;
     let matchJoin;
     const explicitJoinRegex = /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;
@@ -226,13 +215,9 @@ async function sqlExplicitJoinCursorReplacement(currentSqlHover) {
     if (!editor) {
         return;
     }
-    let loginData;
-    loginData = {
-        host: "localhost",
-        user: "root",
-        password: "m1d2e3j4",
-        database: "sakila",
-    };
+    const loginData = await (0, loginManager_1.getLoginDataMySql)();
+    if (!loginData)
+        return;
     let matchExplicitJoin;
     let matchJoin;
     const explicitJoinRegex = /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;

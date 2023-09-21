@@ -5,6 +5,9 @@ import {
   checkExplicitPrimKeys,
   checkImplicitPrimKeys,
 } from "./primaryKeyHelper";
+import { getLoginDataPlSql } from "./loginManager";
+
+
 
 export async function sqlImplicitJoinHoverReplacement(
   currentSqlHover: hover.sqlImplicitJoinHover
@@ -14,14 +17,8 @@ export async function sqlImplicitJoinHoverReplacement(
     return;
   }
 
-  let loginData:
-    | { user: string; password: string; connectionString: string }
-    | undefined;
-  loginData = {
-    user: "system",
-    password: "m1d2e3j4",
-    connectionString: "localhost",
-  };
+  const loginData = await getLoginDataPlSql();
+  if (!loginData) return;
 
   // Here, instead of getting the cursor position, you retrieve the hovered word.
   const range = currentSqlHover.currentImplicitSqlRange;
@@ -123,15 +120,8 @@ export async function sqlImplicitJoinCursorReplacement(
     return;
   }
 
-  let loginData:
-    | { user: string; password: string; connectionString: string }
-    | undefined;
-
-  loginData = {
-    user: "system",
-    password: "m1d2e3j4",
-    connectionString: "localhost",
-  };
+  const loginData = await getLoginDataPlSql();
+  if (!loginData) return;
 
   let matchImplicitJoin;
   let matchWhere: string;
@@ -148,7 +138,7 @@ export async function sqlImplicitJoinCursorReplacement(
 
   let [implicitJoinCursor, implicitJoinRange] = implicitJoinCursorAndRange;
 
-  implicitJoinCursor = implicitJoinCursor.toString().trim();
+  implicitJoinCursor = implicitJoinCursor.toString()/*.trim()*/;
 
   if (!implicitJoinCursor) {
     return;
@@ -252,15 +242,8 @@ export async function sqlExplicitJoinHoverReplacement(
     return;
   }
 
-  let loginData:
-    | { user: string; password: string; connectionString: string }
-    | undefined;
-
-  loginData = {
-    user: "system",
-    password: "m1d2e3j4",
-    connectionString: "localhost:1521"
-  };
+  const loginData = await getLoginDataPlSql();
+  if (!loginData) return;
 
   let matchExplicitJoin;
   let matchJoin: string;
@@ -366,15 +349,9 @@ export async function sqlExplicitJoinCursorReplacement(
   if (!editor) {
     return;
   }
-  let loginData:
-    | { user: string; password: string; connectionString: string }
-    | undefined;
 
-  loginData = {
-    user: "system",
-    password: "m1d2e3j4",
-    connectionString: "localhost:1521",
-  };
+  const loginData = await getLoginDataPlSql();
+  if (!loginData) return;
 
   let matchExplicitJoin;
   let matchJoin: string;

@@ -5,6 +5,7 @@ import {
   checkExplicitPrimKeys,
   checkImplicitPrimKeys,
 } from "./primaryKeyHelper";
+import {getLoginDataMySql} from "./loginManager";
 
 export async function sqlImplicitJoinHoverReplacement(
   currentSqlHover: hover.sqlImplicitJoinHover
@@ -15,20 +16,13 @@ export async function sqlImplicitJoinHoverReplacement(
     return;
   }
 
-  let loginData:
-    | { host: string; user: string; password: string; database: string }
-    | undefined;
-
-  loginData = {
-    host: "localhost",
-    user: "root",
-    password: "m1d2e3j4",
-    database: "sakila",
-  };
+  const loginData = await getLoginDataMySql();
+  if (!loginData) return;
 
   let matchImplicitJoin;
   let matchWhere: string;
-  const implicitJoinRegex = /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
+  const implicitJoinRegex = 
+  /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
 
   // We utilize the hover range provided by currentSqlHover for our hover functionality
   const hoverRange = currentSqlHover.currentImplicitSqlRange;
@@ -127,16 +121,8 @@ export async function sqlImplicitJoinCursorReplacement(
     return;
   }
 
-  let loginData:
-    | { host: string; user: string; password: string; database: string }
-    | undefined;
-
-  loginData = {
-    host: "localhost",
-    user: "root",
-    password: "m1d2e3j4",
-    database: "sakila",
-  };
+  const loginData = await getLoginDataMySql();
+  if (!loginData) return;
 
   let matchImplicitJoin;
   let matchWhere: string;
@@ -256,16 +242,8 @@ export async function sqlExplicitJoinHoverReplacement(
     return;
   }
 
-  let loginData:
-    | { host: string; user: string; password: string; database: string }
-    | undefined;
-
-  loginData = {
-    host: "localhost",
-    user: "root",
-    password: "m1d2e3j4",
-    database: "sakila",
-  };
+  const loginData = await getLoginDataMySql();
+  if (!loginData) return;
 
   let matchExplicitJoin;
   let matchJoin: string;
@@ -372,16 +350,8 @@ export async function sqlExplicitJoinCursorReplacement(
     return;
   }
 
-  let loginData:
-    | { host: string; user: string; password: string; database: string }
-    | undefined;
-
-  loginData = {
-    host: "localhost",
-    user: "root",
-    password: "m1d2e3j4",
-    database: "sakila",
-  };
+  const loginData = await getLoginDataMySql();
+  if (!loginData) return;
 
   let matchExplicitJoin;
   let matchJoin: string;

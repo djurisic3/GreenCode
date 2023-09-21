@@ -59,7 +59,7 @@ async function findPrimaryKeys(uniqueTableNames) {
         for (let row of result.rows) {
             console.log("ROW HERE XXXXX: " + row);
             const tableName = row.TABLE_NAME;
-            console.log("TABLENAME:  ", tableName);
+            console.log("TABLENAME:  ", row.TABLE_NAME);
             const columnName = row.COLUMN_NAME;
             if (!primaryKeyMap[tableName]) {
                 primaryKeyMap[tableName] = [];
@@ -72,7 +72,8 @@ async function findPrimaryKeys(uniqueTableNames) {
 }
 exports.findPrimaryKeys = findPrimaryKeys;
 async function findIndexCandidates(tableColumns) {
-    const connection = await openConnection("system", "m1d2e3j4", "localhost:1521");
+    let loginData = await conn.getLoginDataPlSql();
+    const connection = await openConnection(loginData?.user, loginData?.password, loginData?.connectionString);
     const cardinalityMap = {};
     for (let { table, columnName } of tableColumns) {
         const result = await connection.execute(`SELECT COUNT(*) as cardinality FROM (SELECT DISTINCT ${columnName} FROM ${table})`, {}, { outFormat: oracledb.OUT_FORMAT_OBJECT });
@@ -89,7 +90,8 @@ async function findIndexCandidates(tableColumns) {
 }
 exports.findIndexCandidates = findIndexCandidates;
 async function checkExistingIndexes(tableName, columnName) {
-    const connection = await openConnection("system", "m1d2e3j4", "localhost:1521");
+    let loginData = await conn.getLoginDataPlSql();
+    const connection = await openConnection(loginData?.user, loginData?.password, loginData?.connectionString);
     const result = await connection.execute(`SELECT column_name
     FROM USER_IND_COLUMNS
     WHERE table_name = :tableName

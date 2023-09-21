@@ -4,17 +4,15 @@ exports.sqlExplicitJoinCursorReplacement = exports.sqlExplicitJoinHoverReplaceme
 const vscode = require("vscode");
 const cursor = require("./cursorHelper");
 const primaryKeyHelper_1 = require("./primaryKeyHelper");
+const loginManager_1 = require("./loginManager");
 async function sqlImplicitJoinHoverReplacement(currentSqlHover) {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         return;
     }
-    let loginData;
-    loginData = {
-        user: "system",
-        password: "m1d2e3j4",
-        connectionString: "localhost",
-    };
+    const loginData = await (0, loginManager_1.getLoginDataPlSql)();
+    if (!loginData)
+        return;
     // Here, instead of getting the cursor position, you retrieve the hovered word.
     const range = currentSqlHover.currentImplicitSqlRange;
     if (!range) {
@@ -71,12 +69,9 @@ async function sqlImplicitJoinCursorReplacement(currentSqlHover) {
     if (!editor) {
         return;
     }
-    let loginData;
-    loginData = {
-        user: "system",
-        password: "m1d2e3j4",
-        connectionString: "localhost",
-    };
+    const loginData = await (0, loginManager_1.getLoginDataPlSql)();
+    if (!loginData)
+        return;
     let matchImplicitJoin;
     let matchWhere;
     const implicitJoinRegex = /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
@@ -86,7 +81,7 @@ async function sqlImplicitJoinCursorReplacement(currentSqlHover) {
         return;
     }
     let [implicitJoinCursor, implicitJoinRange] = implicitJoinCursorAndRange;
-    implicitJoinCursor = implicitJoinCursor.toString().trim();
+    implicitJoinCursor = implicitJoinCursor.toString() /*.trim()*/;
     if (!implicitJoinCursor) {
         return;
     }
@@ -151,12 +146,9 @@ async function sqlExplicitJoinHoverReplacement(currentSqlHover) {
     if (!editor) {
         return;
     }
-    let loginData;
-    loginData = {
-        user: "system",
-        password: "m1d2e3j4",
-        connectionString: "localhost:1521"
-    };
+    const loginData = await (0, loginManager_1.getLoginDataPlSql)();
+    if (!loginData)
+        return;
     let matchExplicitJoin;
     let matchJoin;
     const explicitJoinRegex = /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;
@@ -217,12 +209,9 @@ async function sqlExplicitJoinCursorReplacement(currentSqlHover) {
     if (!editor) {
         return;
     }
-    let loginData;
-    loginData = {
-        user: "system",
-        password: "m1d2e3j4",
-        connectionString: "localhost:1521",
-    };
+    const loginData = await (0, loginManager_1.getLoginDataPlSql)();
+    if (!loginData)
+        return;
     let matchExplicitJoin;
     let matchJoin;
     const explicitJoinRegex = /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;
