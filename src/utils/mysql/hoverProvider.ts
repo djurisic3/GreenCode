@@ -42,7 +42,7 @@ export class sqlImplicitJoinHover implements vscode.HoverProvider {
               .then(([tablePrimKeys, isPrimaryKeyAbsent, isValidSql]) => {
                 if (isValidSql && isPrimaryKeyAbsent) {
                   let markdownString = new vscode.MarkdownString(
-                    `Use primary keys to optimize queries.   \n${tablePrimKeys}\n\nClick [here](command:greencode.cleanMarkedCode) to make your code greener or press ctrl + space.`
+                    `Click [here](command:greencode.cleanMarkedCode) to make your code greener or press ctrl + space.`
                   );
                   markdownString.isTrusted = true;
                   return new vscode.Hover(markdownString);
