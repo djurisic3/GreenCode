@@ -71,7 +71,7 @@ async function checkExplicitPrimKeys(credentials, matchExplicitJoin, matchJoinOn
     let isValidSql;
     let isPrimaryKeyAbsent = false;
     let allTablesOrAliases = new Map();
-    const joinPattern = /(?:FROM|JOIN)\s+([\w]+)(?:\s+AS)?(?:\s+([a-zA-Z]+))?/gi;
+    const joinPattern = /(?:FROM|JOIN)\s+([\w]+)(?:\s+AS)?(?:\s+([a-zA-Z]+))?/gim;
     const matchTablesFromJoinOn = Array.from(matchExplicitJoin[0].matchAll(joinPattern));
     const tableNames = matchTablesFromJoinOn.map((match) => {
         if (/inner|join|full|left|right|on/i.test(match[2])) {

@@ -299,7 +299,7 @@ export async function sqlExplicitJoinHoverReplacement(
             const primaryKeys = primaryKeyMap[tableName];
             const tableAlias =
               Array.from(tableAliasMap.entries()).find(
-                ([alias, actualTableName]) => actualTableName === tableName
+                ([alias, actualTableName]) => actualTableName === tableName.toLocaleLowerCase() // toLocaleLowerCase because PLSQL saves tables in upper case
               )?.[0] || tableName;
 
             for (const primaryKey of primaryKeys) {

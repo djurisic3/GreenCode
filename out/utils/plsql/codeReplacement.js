@@ -174,7 +174,8 @@ async function sqlExplicitJoinHoverReplacement(currentSqlHover) {
                 let newConditions = [];
                 for (const tableName in primaryKeyMap) {
                     const primaryKeys = primaryKeyMap[tableName];
-                    const tableAlias = Array.from(tableAliasMap.entries()).find(([alias, actualTableName]) => actualTableName === tableName)?.[0] || tableName;
+                    const tableAlias = Array.from(tableAliasMap.entries()).find(([alias, actualTableName]) => actualTableName === tableName.toLocaleLowerCase() // toLocaleLowerCase because PLSQL saves tables in upper case
+                    )?.[0] || tableName;
                     for (const primaryKey of primaryKeys) {
                         const primaryKeyRegex = new RegExp(`\\b${tableAlias}\\b\\s*\\.\\s*\\b${primaryKey}\\b`, "gim");
                         if (!primaryKeyRegex.test(match)) {
