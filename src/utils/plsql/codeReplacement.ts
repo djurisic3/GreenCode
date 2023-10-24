@@ -6,8 +6,7 @@ import {
   checkImplicitPrimKeys,
 } from "./primaryKeyHelper";
 import { getLoginDataPlSql } from "./loginManager";
-
-
+import * as forLoopHelper from "./forLoopHelper";
 
 export async function sqlImplicitJoinHoverReplacement(
   currentSqlHover: hover.sqlImplicitJoinHover
@@ -138,7 +137,7 @@ export async function sqlImplicitJoinCursorReplacement(
 
   let [implicitJoinCursor, implicitJoinRange] = implicitJoinCursorAndRange;
 
-  implicitJoinCursor = implicitJoinCursor.toString()/*.trim()*/;
+  implicitJoinCursor = implicitJoinCursor.toString() /*.trim()*/;
 
   if (!implicitJoinCursor) {
     return;
@@ -248,7 +247,8 @@ export async function sqlExplicitJoinHoverReplacement(
   let matchExplicitJoin;
   let matchJoin: string;
 
-  const explicitJoinRegex = /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;
+  const explicitJoinRegex =
+    /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;
 
   // We utilize the hover range provided by currentSqlHover for our hover functionality
   const hoverRange = currentSqlHover.currentExplicitSqlRange;
@@ -299,7 +299,8 @@ export async function sqlExplicitJoinHoverReplacement(
             const primaryKeys = primaryKeyMap[tableName];
             const tableAlias =
               Array.from(tableAliasMap.entries()).find(
-                ([alias, actualTableName]) => actualTableName === tableName.toLocaleLowerCase() // toLocaleLowerCase because PLSQL saves tables in upper case
+                ([alias, actualTableName]) =>
+                  actualTableName === tableName.toLocaleLowerCase() // toLocaleLowerCase because PLSQL saves tables in upper case
               )?.[0] || tableName;
 
             for (const primaryKey of primaryKeys) {
@@ -463,3 +464,56 @@ export async function sqlExplicitJoinCursorReplacement(
     }
   }
 }
+
+export const replaceInEditor = (
+  currentSqlHover: hover.sqlStarForLoopHover
+) => {
+  const editor = vscode.window.activeTextEditor;
+  const position = editor!.selection.active;
+  if (editor) {
+    const documentText = editor.document.getText();
+    const selectStarData = forLoopHelper.extractSelectStarQueries(documentText);
+    console.log("FOUND AND REPLACED FOR LOOP WITH SELECT ");
+    selectStarData.forEach(({ query, variableName }) => {
+      const loopBody = forLoopHelper.extractLoopBody(
+        documentText,
+        variableName,
+        query
+      );
+
+      if (!loopBody) {
+        vscode.window.showWarningMessage(
+          `Couldn't determine loop body for query: ${query}`
+        );
+        return;
+      }
+
+      const usedColumns = forLoopHelper.findUsedColumns(loopBody, variableName);
+      const optimizedQuery = forLoopHelper.replaceSelectStar(
+        query,
+        usedColumns
+      );
+
+      let hoverCursorAndRange = cursor.isCursorOnStarForLoop(position);
+
+      if (!hoverCursorAndRange) {
+        return;
+      }
+
+      let [hoverCursor, fullLoopRange, selectRange] = hoverCursorAndRange;
+
+      if (fullLoopRange.contains(position)) {
+        const document = editor!.document;
+        const textInRange = document.getText(selectRange);
+
+        if (textInRange.includes(query)) {
+          editor!.edit((editBuilder) => {
+            editBuilder.replace(selectRange, optimizedQuery);
+            currentSqlHover.currentStarForLoopSql = undefined;
+            currentSqlHover.currentStarForLoopSqlRange = undefined;
+          });
+        }
+      }
+    });
+  }
+};

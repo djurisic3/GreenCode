@@ -5,7 +5,7 @@ import {
   checkExplicitPrimKeys,
   checkImplicitPrimKeys,
 } from "./primaryKeyHelper";
-import {getLoginDataMySql} from "./loginManager";
+import { getLoginDataMySql } from "./loginManager";
 
 export async function sqlImplicitJoinHoverReplacement(
   currentSqlHover: hover.sqlImplicitJoinHover
@@ -21,8 +21,8 @@ export async function sqlImplicitJoinHoverReplacement(
 
   let matchImplicitJoin;
   let matchWhere: string;
-  const implicitJoinRegex = 
-  /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
+  const implicitJoinRegex =
+    /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
 
   // We utilize the hover range provided by currentSqlHover for our hover functionality
   const hoverRange = currentSqlHover.currentImplicitSqlRange;
@@ -130,7 +130,7 @@ export async function sqlImplicitJoinCursorReplacement(
     ///\bSELECT\b[ \t]+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b[ \t]+((\w+(\.\w+)?)([ \t]+(AS[ \t]+)?\w+)?([ \t]*,[ \t]*(\w+(\.\w+)?)([ \t]+(AS[ \t]+)?\w+)?)*)([ \t]+(WHERE[ \t]+((\w+(\.\w+)?[ \t]*=[ \t]*\w+(\.\w+)?)([ \t]+(AND|OR)[ \t]+(\w+(\.\w+)?[ \t]*=[ \t]*\w+(\.\w+)?))*))?)([ \t]*;)?[ \t]*$/gim;
     /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
   const position = editor.selection.active;
-  
+
   let implicitJoinCursorAndRange = cursor.isCursorOnImpJoin(position);
 
   if (!implicitJoinCursorAndRange) {
@@ -221,7 +221,6 @@ export async function sqlImplicitJoinCursorReplacement(
         return;
       }
 
-      
       if ((implicitJoinRange as vscode.Range).contains(position)) {
         editor.edit((editBuilder) => {
           editBuilder.replace(implicitJoinRange as vscode.Range, replacedCode);
@@ -248,7 +247,8 @@ export async function sqlExplicitJoinHoverReplacement(
   let matchExplicitJoin;
   let matchJoin: string;
 
-  const explicitJoinRegex = /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;
+  const explicitJoinRegex =
+    /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;
 
   // We utilize the hover range provided by currentSqlHover for our hover functionality
   const hoverRange = currentSqlHover.currentExplicitSqlRange;
@@ -359,7 +359,7 @@ export async function sqlExplicitJoinCursorReplacement(
   const explicitJoinRegex =
     /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;
   const position = editor.selection.active;
-  
+
   let explicitJoinCursorAndRange = cursor.isCursorOnExpJoin(position);
 
   if (!explicitJoinCursorAndRange) {
@@ -368,14 +368,13 @@ export async function sqlExplicitJoinCursorReplacement(
   let [explicitJoinCursor, explicitJoinRange] = explicitJoinCursorAndRange;
 
   explicitJoinCursor = explicitJoinCursor.toString();
-  
+
   if (!explicitJoinCursor) {
     return;
   } else if (explicitJoinCursor) {
     while (
       (matchExplicitJoin = explicitJoinRegex.exec(explicitJoinCursor)) !== null
     ) {
-      
       if (matchExplicitJoin[10] === undefined) {
         matchJoin = "";
       } else {
@@ -401,47 +400,49 @@ export async function sqlExplicitJoinCursorReplacement(
       ];
 
       if (isValidSql) {
-        replacedCode = explicitJoinCursor.toString().replace(
-          /((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*?)/gim,
-          (match) => {
-            let newConditions = [];
-            for (const tableName in primaryKeyMap) {
-              const primaryKeys = primaryKeyMap[tableName];
-              const tableAlias =
-                Array.from(tableAliasMap.entries()).find(
-                  ([alias, actualTableName]) => actualTableName === tableName
-                )?.[0] || tableName;
-                console.log("TABLE ALIAS: " + tableAlias)
+        replacedCode = explicitJoinCursor
+          .toString()
+          .replace(
+            /((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*?)/gim,
+            (match) => {
+              let newConditions = [];
+              for (const tableName in primaryKeyMap) {
+                const primaryKeys = primaryKeyMap[tableName];
+                const tableAlias =
+                  Array.from(tableAliasMap.entries()).find(
+                    ([alias, actualTableName]) => actualTableName === tableName
+                  )?.[0] || tableName;
+                console.log("TABLE ALIAS: " + tableAlias);
 
-              for (const primaryKey of primaryKeys) {
-                const primaryKeyRegex = new RegExp(
-                  `\\b${tableAlias}\\b\\s*\\.\\s*\\b${primaryKey}\\b`,
-                  "gim"
-                );
-                if (!primaryKeyRegex.test(match)) {
-                  newConditions.push(`${tableAlias}.${primaryKey} = value`);
+                for (const primaryKey of primaryKeys) {
+                  const primaryKeyRegex = new RegExp(
+                    `\\b${tableAlias}\\b\\s*\\.\\s*\\b${primaryKey}\\b`,
+                    "gim"
+                  );
+                  if (!primaryKeyRegex.test(match)) {
+                    newConditions.push(`${tableAlias}.${primaryKey} = value`);
+                  }
                 }
               }
-            }
 
-            const currentConditions = match
-              .replace(
-                /^\s*JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+/gi,
-                ""
-              )
-              .split(/\s+(?:AND|OR)\s+/);
-            const newConditionsSet = new Set(newConditions);
+              const currentConditions = match
+                .replace(
+                  /^\s*JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+/gi,
+                  ""
+                )
+                .split(/\s+(?:AND|OR)\s+/);
+              const newConditionsSet = new Set(newConditions);
 
-            if (
-              newConditions.length > 0 &&
-              !currentConditions.every((cond) => newConditionsSet.has(cond))
-            ) {
-              return `${match} AND ${newConditions.join(" AND ")}`;
-            } else {
-              return match;
+              if (
+                newConditions.length > 0 &&
+                !currentConditions.every((cond) => newConditionsSet.has(cond))
+              ) {
+                return `${match} AND ${newConditions.join(" AND ")}`;
+              } else {
+                return match;
+              }
             }
-          }
-        );
+          );
       }
 
       const document = editor.document;

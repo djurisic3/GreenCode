@@ -7,7 +7,6 @@ const vscode = require("vscode");
 const queryHelper = require("./tableIndexesHelper");
 const loginManager_1 = require("./loginManager");
 let credentials;
-let loginData;
 const outputChannel = vscode.window.createOutputChannel("WebView Console");
 //izbaci tablesList ovdje ako hoces report o svim tablicama napravit
 async function findSqlQueries(uri) {

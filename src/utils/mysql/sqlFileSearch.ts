@@ -7,9 +7,7 @@ import { getLoginDataMySql } from "./loginManager";
 let credentials:
   | { host: string; user: string; password: string; database: string }
   | undefined;
-let loginData:
-  | { host: string; user: string; password: string; database: string }
-  | undefined;
+
 
 const outputChannel = vscode.window.createOutputChannel("WebView Console");
 

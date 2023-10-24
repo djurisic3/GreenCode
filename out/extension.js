@@ -21,7 +21,6 @@ let decorationTypeSql;
 let decorationTypeSqlCritical;
 let decorationTypeMiscellaneous;
 let activeEditor;
-let sqlDecorationLevel;
 function updateDecorationsForLoop() {
     activeEditor = vscode.window.activeTextEditor;
     if (!activeEditor) {
@@ -103,6 +102,45 @@ async function activate(context) {
     let sqlExplicitHoverProvider = new hoverProvider_1.sqlExplicitJoinHover();
     let plsqlExplicitHoverProvider = new hoverProvider_2.sqlExplicitJoinHover();
     let plsqlImplicitHoverProvider = new hoverProvider_2.sqlImplicitJoinHover();
+    let plsqlStarForLoopHoverProvider = new hoverProvider_2.sqlStarForLoopHover();
+    // let disposable = vscode.commands.registerCommand(
+    //   "greencode.optimizeSql",
+    //   () => {
+    //     const editor = vscode.window.activeTextEditor;
+    //     if (editor) {
+    //       const documentText = editor.document.getText();
+    //       const selectStarData =
+    //         forLoopHelper.extractSelectStarQueries(documentText);
+    //       console.log("FOUND AND REPLACED FOR LOOP WITH SELECT ");
+    //       selectStarData.forEach(({ query, variableName }) => {
+    //         const loopBody = forLoopHelper.extractLoopBody(
+    //           documentText,
+    //           variableName,
+    //           query
+    //         );
+    //         if (!loopBody) {
+    //           vscode.window.showWarningMessage(
+    //             `Couldn't determine loop body for query: ${query}`
+    //           );
+    //           return;
+    //         }
+    //         const usedColumns = forLoopHelper.findUsedColumns(
+    //           loopBody,
+    //           variableName
+    //         );
+    //         const optimizedQuery = forLoopHelper.replaceSelectStar(
+    //           query,
+    //           usedColumns
+    //         );
+    //         plsqlCode.replaceInEditor(editor, query, optimizedQuery);
+    //         vscode.window.showInformationMessage(
+    //           `Original Query: ${query}\nOptimized Query: ${optimizedQuery}`
+    //         );
+    //       });
+    //     }
+    //   }
+    // );
+    // context.subscriptions.push(disposable);
     const disposableFindAllQueries = vscode.commands.registerCommand("greencode.findSqlQueries", async () => {
         const options = {
             canSelectFiles: false,
@@ -145,6 +183,7 @@ async function activate(context) {
         if (serverType === "Oracle (PL/SQL)") {
             context.subscriptions.push(vscode.languages.registerHoverProvider("sql", plsqlExplicitHoverProvider));
             context.subscriptions.push(vscode.languages.registerHoverProvider("sql", plsqlImplicitHoverProvider));
+            context.subscriptions.push(vscode.languages.registerHoverProvider("sql", plsqlStarForLoopHoverProvider));
             loginData = await (0, loginManager_1.getLoginDataPlSql)();
             if (!loginData || loginData === undefined) {
                 await vscode.window
@@ -219,6 +258,11 @@ async function activate(context) {
             serverType === "Oracle (PL/SQL)") {
             plsqlCode.sqlImplicitJoinHoverReplacement(plsqlImplicitHoverProvider);
         }
+        else if (plsqlStarForLoopHoverProvider.currentStarForLoopSql !== undefined &&
+            serverType === "Oracle (PL/SQL)") {
+            plsqlCode.replaceInEditor(plsqlStarForLoopHoverProvider);
+            console.log("for loop hover");
+        }
         else if (plsqlExplicitHoverProvider.currentExplicitSql !== undefined &&
             serverType === "Oracle (PL/SQL)") {
             plsqlCode.sqlExplicitJoinHoverReplacement(plsqlExplicitHoverProvider);
@@ -232,6 +276,7 @@ async function activate(context) {
                 mysqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
             }
             else if (serverType === "Oracle (PL/SQL)") {
+                plsqlCode.replaceInEditor(plsqlStarForLoopHoverProvider);
                 plsqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
                 plsqlCode.sqlImplicitJoinCursorReplacement(sqlImplicitHoverProvider);
             }
@@ -246,7 +291,7 @@ async function activate(context) {
     });
     context.subscriptions.push(decorationTypeSql);
     decorationTypeSqlCritical = vscode.window.createTextEditorDecorationType({
-        textDecoration: "underline dashed red"
+        textDecoration: "underline dashed red",
     });
     context.subscriptions.push(decorationTypeSqlCritical);
     decorationTypeCsv = vscode.window.createTextEditorDecorationType({

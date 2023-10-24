@@ -236,17 +236,45 @@ export function findSelectAsteriskStatements(
     return conditions;
   }
   //
+  const forLoopRanges: vscode.Range[] = [];
+
+  // SELECT * in a for loop
+  const sqlStarForLoop =
+    /for\s+([a-zA-Z0-9_]+)\s+in\s*\(\s*(select\s+(?:[a-zA-Z0-9_]+\.\*)?\s*\*?\s+from\s+[a-zA-Z0-9_]+.*?)(?=\s*\)\s+loop)/gim;
+  let matchSqlStarForLoop;
+  while ((matchSqlStarForLoop = sqlStarForLoop.exec(text)) !== null) {
+    const start = document.positionAt(matchSqlStarForLoop.index);
+    const end = document.positionAt(sqlStarForLoop.lastIndex);
+    const range = new vscode.Range(start, end);
+    forLoopRanges.push(range);
+    decorations.push({
+      range: range,
+      hoverMessage: `Use column names instead of the "*" wildcard character. For loops use much more energy than regular queries.`,
+    });
+  }
+
+  // Check if a given position is within any of the for-loop ranges
+  const isInForLoopRange = (position: vscode.Position) => {
+    return forLoopRanges.some((range) => range.contains(position));
+  };
 
   // SELECT * logic
   const sqlStarStatements = /\bselect\s+\*\s+(from|into)\b/gim;
   let matchSqlStar;
   while ((matchSqlStar = sqlStarStatements.exec(text)) !== null) {
     const start = document.positionAt(matchSqlStar.index);
+
+    // If this select * is inside a for loop, skip adding the decoration
+    if (isInForLoopRange(start)) {
+      continue;
+    }
+
     const end = document.positionAt(sqlStarStatements.lastIndex);
     decorations.push({
       range: new vscode.Range(start, end),
       hoverMessage: `Use column names instead of the "*" wildcard character.   \nYou can save up to 40% in energy per statement call when using only relevant columns.`,
     });
   }
+
   return decorations;
 }

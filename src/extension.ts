@@ -15,9 +15,11 @@ import {
 import {
   sqlExplicitJoinHover as plsqlExplicitJoinHover,
   sqlImplicitJoinHover as plsqlImplicitJoinHover,
+  sqlStarForLoopHover as plsqlStarForLoopHover,
 } from "./utils/plsql/hoverProvider";
 import * as sqlFileSearch from "./utils/mysql/sqlFileSearch";
 import * as criticalDirt from "./utils/mysql/dirtFinderCritical";
+import * as forLoopHelper from "./utils/plsql/forLoopHelper";
 
 let decorationTypeForLoop: vscode.TextEditorDecorationType;
 let decorationTypeCsv: vscode.TextEditorDecorationType;
@@ -25,7 +27,6 @@ let decorationTypeSql: vscode.TextEditorDecorationType;
 let decorationTypeSqlCritical: vscode.TextEditorDecorationType;
 let decorationTypeMiscellaneous: vscode.TextEditorDecorationType;
 let activeEditor: vscode.TextEditor | undefined;
-let sqlDecorationLevel: number;
 
 function updateDecorationsForLoop() {
   activeEditor = vscode.window.activeTextEditor;
@@ -60,9 +61,11 @@ async function updateDecorationsSql() {
     return;
   }
 
-  const selectStarDecoration = criticalDirt.findSelectAsteriskStatements(activeEditor.document);
+  const selectStarDecoration = criticalDirt.findSelectAsteriskStatements(
+    activeEditor.document
+  );
 
-  activeEditor.setDecorations(decorationTypeSqlCritical,selectStarDecoration);
+  activeEditor.setDecorations(decorationTypeSqlCritical, selectStarDecoration);
 
   let isLogged = false;
   let decorations = await sqlFinder.markSelectSQL(
@@ -128,6 +131,51 @@ export async function activate(context: vscode.ExtensionContext) {
   let sqlExplicitHoverProvider = new sqlExplicitJoinHover();
   let plsqlExplicitHoverProvider = new plsqlExplicitJoinHover();
   let plsqlImplicitHoverProvider = new plsqlImplicitJoinHover();
+  let plsqlStarForLoopHoverProvider = new plsqlStarForLoopHover();
+
+  // let disposable = vscode.commands.registerCommand(
+  //   "greencode.optimizeSql",
+  //   () => {
+  //     const editor = vscode.window.activeTextEditor;
+  //     if (editor) {
+  //       const documentText = editor.document.getText();
+  //       const selectStarData =
+  //         forLoopHelper.extractSelectStarQueries(documentText);
+  //       console.log("FOUND AND REPLACED FOR LOOP WITH SELECT ");
+  //       selectStarData.forEach(({ query, variableName }) => {
+  //         const loopBody = forLoopHelper.extractLoopBody(
+  //           documentText,
+  //           variableName,
+  //           query
+  //         );
+
+  //         if (!loopBody) {
+  //           vscode.window.showWarningMessage(
+  //             `Couldn't determine loop body for query: ${query}`
+  //           );
+  //           return;
+  //         }
+
+  //         const usedColumns = forLoopHelper.findUsedColumns(
+  //           loopBody,
+  //           variableName
+  //         );
+  //         const optimizedQuery = forLoopHelper.replaceSelectStar(
+  //           query,
+  //           usedColumns
+  //         );
+
+  //         plsqlCode.replaceInEditor(editor, query, optimizedQuery);
+
+  //         vscode.window.showInformationMessage(
+  //           `Original Query: ${query}\nOptimized Query: ${optimizedQuery}`
+  //         );
+  //       });
+  //     }
+  //   }
+  // );
+
+  // context.subscriptions.push(disposable);
 
   const disposableFindAllQueries = vscode.commands.registerCommand(
     "greencode.findSqlQueries",
@@ -209,6 +257,12 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerHoverProvider(
           "sql",
           plsqlImplicitHoverProvider
+        )
+      );
+      context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+          "sql",
+          plsqlStarForLoopHoverProvider
         )
       );
       loginData = await getLoginDataPlSql();
@@ -329,15 +383,18 @@ export async function activate(context: vscode.ExtensionContext) {
         serverType === "Oracle (PL/SQL)"
       ) {
         plsqlCode.sqlImplicitJoinHoverReplacement(plsqlImplicitHoverProvider);
-      } 
-      else if (
+      } else if (
+        plsqlStarForLoopHoverProvider.currentStarForLoopSql !== undefined &&
+        serverType === "Oracle (PL/SQL)"
+      ) {
+        plsqlCode.replaceInEditor(plsqlStarForLoopHoverProvider);
+        console.log("for loop hover");
+      } else if (
         plsqlExplicitHoverProvider.currentExplicitSql !== undefined &&
         serverType === "Oracle (PL/SQL)"
       ) {
         plsqlCode.sqlExplicitJoinHoverReplacement(plsqlExplicitHoverProvider);
-      }
-      
-      else {
+      } else {
         pyCode.csvCursorReplacement(csvHoverProvider);
         pyCode.forCursorReplacement(forHoverProvider);
         pyCode.miscellaneousReplacement(miscHoverProvider);
@@ -345,6 +402,7 @@ export async function activate(context: vscode.ExtensionContext) {
           mysqlCode.sqlImplicitJoinCursorReplacement(sqlImplicitHoverProvider);
           mysqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
         } else if (serverType === "Oracle (PL/SQL)") {
+          plsqlCode.replaceInEditor(plsqlStarForLoopHoverProvider);
           plsqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
           plsqlCode.sqlImplicitJoinCursorReplacement(sqlImplicitHoverProvider);
         }
@@ -363,8 +421,8 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(decorationTypeSql);
 
   decorationTypeSqlCritical = vscode.window.createTextEditorDecorationType({
-    textDecoration: "underline dashed red"
-  })
+    textDecoration: "underline dashed red",
+  });
   context.subscriptions.push(decorationTypeSqlCritical);
 
   decorationTypeCsv = vscode.window.createTextEditorDecorationType({
@@ -389,7 +447,6 @@ export async function activate(context: vscode.ExtensionContext) {
         );
       } else {
         updateDecorationsSql();
-        
       }
       updateDecorationsForLoop(),
         updateDecorationsCsv(),
@@ -406,7 +463,7 @@ export async function activate(context: vscode.ExtensionContext) {
         deactivateDecorationsCsv(),
         deactivateDecorationsMiscellaneous(),
         deactivateDecorationsSql();
-        deactivateDecorationsSqlCritical();
+      deactivateDecorationsSqlCritical();
     }
   );
 

@@ -36,6 +36,40 @@ export class sqlImplicitJoinHover implements vscode.HoverProvider {
   }
 }
 
+export class sqlStarForLoopHover implements vscode.HoverProvider {
+  currentStarForLoopSql: string | undefined;
+  currentStarForLoopSqlRange: vscode.Range | undefined;
+
+  provideHover(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    token: vscode.CancellationToken
+  ): vscode.ProviderResult<vscode.Hover> {
+    let text = document.getText();
+    let matches = text.matchAll(
+      /for\s+([a-zA-Z0-9_]+)\s+in\s*\(\s*(select\s+(?:[a-zA-Z0-9_]+\.\*)?\s*\*?\s+from\s+[a-zA-Z0-9_]+.*?)(?=\s*\)\s+loop)/gim
+      );
+
+    for (const match of matches) {
+      let starForLoopStart = match.index!;
+      let starForLoopEnd = starForLoopStart + match[0].length;
+      let range = new vscode.Range(
+        document.positionAt(starForLoopStart),
+        document.positionAt(starForLoopEnd)
+      );
+      if (range.contains(position)) {
+        this.currentStarForLoopSql = match[0];
+        this.currentStarForLoopSqlRange = range;
+        let markdownString = new vscode.MarkdownString(
+          `Place your text cursor on the for loop and press ctrl + space, to make your code greener.`
+        );
+        markdownString.isTrusted = true;
+        return new vscode.Hover(markdownString);
+      }
+    }
+  }
+}
+
 export class sqlExplicitJoinHover implements vscode.HoverProvider {
   currentExplicitSql: string | undefined;
   currentExplicitSqlRange: vscode.Range | undefined;

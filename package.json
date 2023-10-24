@@ -37,6 +37,10 @@
         "key": "ctrl+j"
       },
       {
+        "command": "greencode.optimizeSql",
+        "key": "ctrl+alt+o"
+      },
+      {
         "command": "greencode.promptLoginData"
       }
     ],

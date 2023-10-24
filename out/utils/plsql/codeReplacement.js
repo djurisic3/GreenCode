@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sqlExplicitJoinCursorReplacement = exports.sqlExplicitJoinHoverReplacement = exports.sqlImplicitJoinCursorReplacement = exports.sqlImplicitJoinHoverReplacement = void 0;
+exports.replaceInEditor = exports.sqlExplicitJoinCursorReplacement = exports.sqlExplicitJoinHoverReplacement = exports.sqlImplicitJoinCursorReplacement = exports.sqlImplicitJoinHoverReplacement = void 0;
 const vscode = require("vscode");
 const cursor = require("./cursorHelper");
 const primaryKeyHelper_1 = require("./primaryKeyHelper");
 const loginManager_1 = require("./loginManager");
+const forLoopHelper = require("./forLoopHelper");
 async function sqlImplicitJoinHoverReplacement(currentSqlHover) {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -281,4 +282,39 @@ async function sqlExplicitJoinCursorReplacement(currentSqlHover) {
     }
 }
 exports.sqlExplicitJoinCursorReplacement = sqlExplicitJoinCursorReplacement;
+const replaceInEditor = (currentSqlHover) => {
+    const editor = vscode.window.activeTextEditor;
+    const position = editor.selection.active;
+    if (editor) {
+        const documentText = editor.document.getText();
+        const selectStarData = forLoopHelper.extractSelectStarQueries(documentText);
+        console.log("FOUND AND REPLACED FOR LOOP WITH SELECT ");
+        selectStarData.forEach(({ query, variableName }) => {
+            const loopBody = forLoopHelper.extractLoopBody(documentText, variableName, query);
+            if (!loopBody) {
+                vscode.window.showWarningMessage(`Couldn't determine loop body for query: ${query}`);
+                return;
+            }
+            const usedColumns = forLoopHelper.findUsedColumns(loopBody, variableName);
+            const optimizedQuery = forLoopHelper.replaceSelectStar(query, usedColumns);
+            let hoverCursorAndRange = cursor.isCursorOnStarForLoop(position);
+            if (!hoverCursorAndRange) {
+                return;
+            }
+            let [hoverCursor, fullLoopRange, selectRange] = hoverCursorAndRange;
+            if (fullLoopRange.contains(position)) {
+                const document = editor.document;
+                const textInRange = document.getText(selectRange);
+                if (textInRange.includes(query)) {
+                    editor.edit((editBuilder) => {
+                        editBuilder.replace(selectRange, optimizedQuery);
+                        currentSqlHover.currentStarForLoopSql = undefined;
+                        currentSqlHover.currentStarForLoopSqlRange = undefined;
+                    });
+                }
+            }
+        });
+    }
+};
+exports.replaceInEditor = replaceInEditor;
 //# sourceMappingURL=codeReplacement.js.map
