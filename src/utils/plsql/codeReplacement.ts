@@ -412,7 +412,6 @@ export async function sqlExplicitJoinCursorReplacement(
                     ([alias, actualTableName]) =>
                       actualTableName === tableName.toLocaleLowerCase()
                   )?.[0] || tableName;
-                console.log("TABLE OR ALIAS: " + tableAlias);
 
                 for (const primaryKey of primaryKeys) {
                   const primaryKeyRegex = new RegExp(

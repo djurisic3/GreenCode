@@ -53,13 +53,10 @@ async function findPrimaryKeys(uniqueTableNames) {
      AND ind.table_name = cols.table_name
      AND cols.table_name IN (${bindvarsStr})
      ORDER BY cols.table_name, cols.column_position`, bindObj, { outFormat: oracledb.OUT_FORMAT_OBJECT });
-    console.log("ORACLE DB QUERY: " + result);
     const primaryKeyMap = {};
     if (result.rows && Array.isArray(result.rows)) {
         for (let row of result.rows) {
-            console.log("ROW HERE XXXXX: " + row);
             const tableName = row.TABLE_NAME;
-            console.log("TABLENAME:  ", row.TABLE_NAME);
             const columnName = row.COLUMN_NAME;
             if (!primaryKeyMap[tableName]) {
                 primaryKeyMap[tableName] = [];

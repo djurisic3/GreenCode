@@ -44,9 +44,6 @@ async function markSelectSQL(document, isLogged, loginData) {
         }
         else if (isPlsqlLoginData(loginData)) {
             const [tablePrimKeys, isPrimaryKeyAbsentExplicit, isValidExplicitSql] = await primKeysPlSqlHelper.checkImplicitPrimKeys(loginData, matchImplicitJoin, matchWhere);
-            console.log("tablePrimKeys: " + tablePrimKeys);
-            console.log("isPrimaryKeyAbsentExplicit: " + isPrimaryKeyAbsentExplicit);
-            console.log("isValidExplicitSql: " + isValidExplicitSql);
             if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
                 const start = document.positionAt(matchImplicitJoin.index);
                 const end = document.positionAt(implicitJoinRegex.lastIndex);
@@ -142,9 +139,6 @@ async function markSelectSQL(document, isLogged, loginData) {
         }
         else if (isPlsqlLoginData(loginData)) {
             const [tablePrimKeys, isPrimaryKeyAbsentExplicit, isValidExplicitSql] = await primKeysPlSqlHelper.checkExplicitPrimKeys(loginData, matchExplicitJoin, matchJoinOn);
-            console.log("tablePrimKeys: " + tablePrimKeys);
-            console.log("isPrimaryKeyAbsentExplicit: " + isPrimaryKeyAbsentExplicit);
-            console.log("isValidExplicitSql: " + isValidExplicitSql);
             if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
                 const start = document.positionAt(matchExplicitJoin.index);
                 const end = document.positionAt(explicitJoinRegex.lastIndex);

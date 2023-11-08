@@ -411,7 +411,6 @@ export async function sqlExplicitJoinCursorReplacement(
                 Array.from(tableAliasMap.entries()).find(
                   ([alias, actualTableName]) => actualTableName === tableName
                 )?.[0] || tableName;
-                console.log("TABLE ALIAS: " + tableAlias)
 
               for (const primaryKey of primaryKeys) {
                 const primaryKeyRegex = new RegExp(

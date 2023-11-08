@@ -78,9 +78,6 @@ export async function markSelectSQL(
           matchImplicitJoin,
           matchWhere
         );
-      console.log("tablePrimKeys: " + tablePrimKeys);
-      console.log("isPrimaryKeyAbsentExplicit: " + isPrimaryKeyAbsentExplicit);
-      console.log("isValidExplicitSql: " + isValidExplicitSql);
       if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
         const start = document.positionAt(matchImplicitJoin.index);
         const end = document.positionAt(implicitJoinRegex.lastIndex);
@@ -226,9 +223,7 @@ export async function markSelectSQL(
           matchExplicitJoin,
           matchJoinOn
         );
-      console.log("tablePrimKeys: " + tablePrimKeys);
-      console.log("isPrimaryKeyAbsentExplicit: " + isPrimaryKeyAbsentExplicit);
-      console.log("isValidExplicitSql: " + isValidExplicitSql);
+
       if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
         const start = document.positionAt(matchExplicitJoin.index);
         const end = document.positionAt(explicitJoinRegex.lastIndex);

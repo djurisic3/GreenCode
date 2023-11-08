@@ -80,15 +80,12 @@ export async function findPrimaryKeys(
     { outFormat: oracledb.OUT_FORMAT_OBJECT }
   );
 
-  console.log("ORACLE DB QUERY: " + result);
 
   const primaryKeyMap: { [tableName: string]: string[] } = {};
 
   if (result.rows && Array.isArray(result.rows)) {
     for (let row of result.rows) {
-      console.log("ROW HERE XXXXX: "+ row)
       const tableName = row.TABLE_NAME;
-      console.log("TABLENAME:  ", row.TABLE_NAME)
       const columnName = row.COLUMN_NAME;
       if (!primaryKeyMap[tableName]) {
         primaryKeyMap[tableName] = [];

@@ -105,12 +105,8 @@ async function checkExplicitPrimKeys(credentials, matchExplicitJoin, matchJoinOn
         }
         return actualTableName;
     });
-    console.log('processedTableNames:', processedTableNames);
-    console.log('tableAliasMap:', tableAliasMap);
     await (0, tableIndexesHelper_1.openConnection)(credentials.user, credentials.password, credentials.connectionString);
     const primaryKeyMap = await (0, tableIndexesHelper_1.findPrimaryKeys)(processedTableNames);
-    console.log("CONNECTION OPEN");
-    console.log("PRIMARY KEY MAP: " + primaryKeyMap);
     // Create a string of table names and their corresponding primary keys
     const tableInfo = processedTableNames
         .map((tableName) => {
@@ -118,17 +114,12 @@ async function checkExplicitPrimKeys(credentials, matchExplicitJoin, matchJoinOn
         return `${tableName}: ${primaryKeys.join(", ")}`;
     })
         .join("   \n");
-    console.log("TABLE INFO: ", tableInfo);
     for (const tableName in primaryKeyMap) {
         const primaryKeys = primaryKeyMap[tableName] ?? ["unknown"];
-        console.log('Checking primaryKeys for tableName: ', tableName);
-        console.log('primaryKeys: ', primaryKeys);
         let allPrimaryKeysPresent = true;
         primaryKeys.forEach((primaryKey) => {
             const table = allTablesOrAliases.get(tableName.toLocaleLowerCase());
             const primaryKeyRegex = new RegExp(`\\b${table}\\.${primaryKey}\\b`, "gmi");
-            console.log("TABLE: " + table);
-            console.log("PRIM KEY: " + primaryKey);
             if (!primaryKeyRegex.test(matchJoinOn)) {
                 allPrimaryKeysPresent = false;
             }

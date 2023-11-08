@@ -25,7 +25,6 @@ let decorationTypeSql: vscode.TextEditorDecorationType;
 let decorationTypeSqlCritical: vscode.TextEditorDecorationType;
 let decorationTypeMiscellaneous: vscode.TextEditorDecorationType;
 let activeEditor: vscode.TextEditor | undefined;
-let sqlDecorationLevel: number;
 
 function updateDecorationsForLoop() {
   activeEditor = vscode.window.activeTextEditor;
