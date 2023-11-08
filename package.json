@@ -17,10 +17,6 @@
   "contributes": {
     "keybindings": [
       {
-        "command": "greencode.cleanCompleteCode",
-        "key": "ctrl+alt+g"
-      },
-      {
         "command": "greencode.markDirtyCode",
         "key": "shift+ctrl+alt+f"
       },
@@ -33,22 +29,15 @@
         "key": "ctrl+space"
       },
       {
-        "command": "greencode.connectToLocalhost",
-        "key": "ctrl+j"
-      },
-      {
         "command": "greencode.promptLoginData"
       }
     ],
     "commands": [
       {
         "command": "greencode.findSqlQueries",
-        "title": "GreenCode: Find all SQL queries"
+        "title": "GreenCode: Analyze database for optimization suggestions"
       },
-      {
-        "command": "greencode.connectToLocalhost",
-        "title": "GreenCode: Connect to localhost"
-      },
+
       {
         "command": "greencode.cleanMarkedCode",
         "title": "GreenCode: Replace dirty code with green code"
@@ -60,10 +49,6 @@
       {
         "command": "greencode.deactivateMarkDirtyCode",
         "title": "GreenCode: Deactivate the dirt seeker"
-      },
-      {
-        "command": "greencode.cleanCompleteCode",
-        "title": "GreenCode: Replace all dirty code with green code"
       }
     ]
   },
