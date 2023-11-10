@@ -162,45 +162,34 @@ export function findSelectAsteriskStatements(
       conditions.push(...joinConditions);
       const usedTables = new Set<string>();
 
-      conditions.forEach((condition: Condition) => {
-        fromTables.forEach((table: Table) => {
-          // If condition is a BinaryExpr
-          if (
-            typeof condition === "object" &&
-            "left" in condition &&
-            "right" in condition
-          ) {
-            const conditionString = `${condition.left.table} ${condition.right.table}`;
-
-            if (
-              conditionString.includes(`${table.name}`) ||
-              conditionString.includes(`${table.name}`) ||
-              conditionString.includes(`${table.alias}`) ||
-              conditionString.includes(`${table.alias}`)
-            ) {
-              usedTables.add(table.name);
-            }
-          }
-          // If condition is a string
-          else if (
-            typeof condition === "string" &&
-            (condition.includes(`${table.name}`) ||
-              condition.includes(`${table.name}`) ||
-              condition.includes(`${table.alias}`) ||
-              condition.includes(`${table.alias}`))
-          ) {
-            usedTables.add(table.name);
-          }
-        });
-      });
-
-      // If not all tables are used in ON conditions, it's a Cartesian product
-      if (usedTables.size < fromTables.length) {
-        return true;
+      function extractTableNames(condition: any) {
+        if (!condition) {
+          return;
+        }
+      
+        // Recursively process binary expressions
+        if (condition.type === 'binary_expr') {
+          extractTableNames(condition.left);
+          extractTableNames(condition.right);
+        }
+      
+        // Extract table names from column references
+        if (condition.type === 'column_ref') {
+          usedTables.add(condition.table);
+        }
       }
+      
+      joinConditions.forEach(extractTableNames);
+      
+      // If not all tables are used in ON conditions, it's a Cartesian product
+      // Compare the elements of usedTables with fromTables
+      const allTablesUsed = fromTables.every(
+        table => usedTables.has(table.name) || (table.alias && usedTables.has(table.alias))
+      );
+      
+      // A Cartesian product is present if not all tables are used in the conditions
+      return !allTablesUsed;
     }
-
-    return false;
   }
 
   function extractJoinConditions(joinNodeOrArray: any): string[] {
