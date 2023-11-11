@@ -18,6 +18,7 @@ import {
 } from "./utils/plsql/hoverProvider";
 import * as sqlFileSearch from "./utils/mysql/sqlFileSearch";
 import * as criticalDirt from "./utils/mysql/dirtFinderCritical";
+import * as counter from "./utils/counter";
 
 let decorationTypeForLoop: vscode.TextEditorDecorationType;
 let decorationTypeCsv: vscode.TextEditorDecorationType;
@@ -55,13 +56,23 @@ function updateDecorationsMiscellaneous() {
 
 async function updateDecorationsSql() {
   activeEditor = vscode.window.activeTextEditor;
+  counter.resetCounter();
+  counter.resetCounterCritical();
   if (!activeEditor) {
     return;
   }
 
-  const selectStarDecoration = criticalDirt.findSelectAsteriskStatements(activeEditor.document);
+  const selectStarDecoration = criticalDirt.findSelectAsteriskStatements(
+    activeEditor.document
+  );
 
-  activeEditor.setDecorations(decorationTypeSqlCritical,selectStarDecoration);
+  activeEditor.setDecorations(decorationTypeSqlCritical, selectStarDecoration);
+
+  if (selectStarDecoration) {
+    vscode.window.showInformationMessage(
+      `High Severity: ${counter.getCounterCritical()} spots need eco-efficient optimization.`
+    );
+  }
 
   let isLogged = false;
   let decorations = await sqlFinder.markSelectSQL(
@@ -69,6 +80,12 @@ async function updateDecorationsSql() {
     isLogged,
     loginData!
   );
+
+  if (decorations) {
+    vscode.window.showInformationMessage(
+      `Medium Severity: ${counter.getCounter()} spots need eco-efficient optimization.`
+    );
+  }
   activeEditor.setDecorations(decorationTypeSql, decorations);
 }
 
@@ -328,15 +345,12 @@ export async function activate(context: vscode.ExtensionContext) {
         serverType === "Oracle (PL/SQL)"
       ) {
         plsqlCode.sqlImplicitJoinHoverReplacement(plsqlImplicitHoverProvider);
-      } 
-      else if (
+      } else if (
         plsqlExplicitHoverProvider.currentExplicitSql !== undefined &&
         serverType === "Oracle (PL/SQL)"
       ) {
         plsqlCode.sqlExplicitJoinHoverReplacement(plsqlExplicitHoverProvider);
-      }
-      
-      else {
+      } else {
         pyCode.csvCursorReplacement(csvHoverProvider);
         pyCode.forCursorReplacement(forHoverProvider);
         pyCode.miscellaneousReplacement(miscHoverProvider);
@@ -362,8 +376,8 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(decorationTypeSql);
 
   decorationTypeSqlCritical = vscode.window.createTextEditorDecorationType({
-    textDecoration: "underline dashed red"
-  })
+    textDecoration: "underline dashed red",
+  });
   context.subscriptions.push(decorationTypeSqlCritical);
 
   decorationTypeCsv = vscode.window.createTextEditorDecorationType({
@@ -388,7 +402,6 @@ export async function activate(context: vscode.ExtensionContext) {
         );
       } else {
         updateDecorationsSql();
-        
       }
       updateDecorationsForLoop(),
         updateDecorationsCsv(),
@@ -405,7 +418,7 @@ export async function activate(context: vscode.ExtensionContext) {
         deactivateDecorationsCsv(),
         deactivateDecorationsMiscellaneous(),
         deactivateDecorationsSql();
-        deactivateDecorationsSqlCritical();
+      deactivateDecorationsSqlCritical();
     }
   );
 

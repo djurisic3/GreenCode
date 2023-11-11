@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.findSelectAsteriskStatements = void 0;
 const vscode = require("vscode");
 const node_sql_parser_1 = require("node-sql-parser");
+const counter = require("../counter");
+let globalCriticalOccurrenceCounter = 0;
 function findSelectAsteriskStatements(document) {
     let decorations = [];
     let text = document.getText();
@@ -120,6 +122,9 @@ function findSelectAsteriskStatements(document) {
             // If not all tables are used in ON conditions, it's a Cartesian product
             // Compare the elements of usedTables with fromTables
             const allTablesUsed = fromTables.every(table => usedTables.has(table.name) || (table.alias && usedTables.has(table.alias)));
+            if (!allTablesUsed) {
+                counter.incrementCounterCritical();
+            }
             // A Cartesian product is present if not all tables are used in the conditions
             return !allTablesUsed;
         }
@@ -158,6 +163,7 @@ function findSelectAsteriskStatements(document) {
     const sqlStarStatements = /\bselect\s+\*\s+(from|into)\b/gim;
     let matchSqlStar;
     while ((matchSqlStar = sqlStarStatements.exec(text)) !== null) {
+        counter.incrementCounterCritical();
         const start = document.positionAt(matchSqlStar.index);
         const end = document.positionAt(sqlStarStatements.lastIndex);
         decorations.push({

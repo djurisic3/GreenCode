@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 import * as primKeysHelper from "./primaryKeyHelper";
 import * as primKeysPlSqlHelper from "../plsql/primaryKeyHelper";
+import * as counter from "../counter";
+
 
 export async function markSelectSQL(
   document: vscode.TextDocument,
@@ -66,6 +68,7 @@ export async function markSelectSQL(
       if (isValidSql && isPrimaryKeyAbsent) {
         const start = document.positionAt(matchImplicitJoin.index);
         const end = document.positionAt(implicitJoinRegex.lastIndex);
+        counter.incrementCounter();
         decorations.push({
           range: new vscode.Range(start, end),
           hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
@@ -81,6 +84,7 @@ export async function markSelectSQL(
       if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
         const start = document.positionAt(matchImplicitJoin.index);
         const end = document.positionAt(implicitJoinRegex.lastIndex);
+        counter.incrementCounter();
         decorations.push({
           range: new vscode.Range(start, end),
           hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
@@ -110,6 +114,7 @@ export async function markSelectSQL(
 
   while ((matchUpdate = updateStatement.exec(text)) !== null) {
     if (!/\bwhere\b/i.test(matchUpdate[0])) {
+      counter.incrementCounter()
       const start = document.positionAt(matchUpdate.index);
       const end = document.positionAt(updateStatement.lastIndex);
 
@@ -150,6 +155,7 @@ export async function markSelectSQL(
           matchWhere
         );
 
+      counter.incrementCounter();
       const start = document.positionAt(matchSqlStatements.index);
       const end = document.positionAt(sqlStatements.lastIndex);
       decorations.push({
@@ -209,6 +215,7 @@ export async function markSelectSQL(
         );
 
       if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
+        counter.incrementCounter();
         const start = document.positionAt(matchExplicitJoin.index);
         const end = document.positionAt(explicitJoinRegex.lastIndex);
         decorations.push({
@@ -225,6 +232,7 @@ export async function markSelectSQL(
         );
 
       if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
+        counter.incrementCounter();
         const start = document.positionAt(matchExplicitJoin.index);
         const end = document.positionAt(explicitJoinRegex.lastIndex);
         decorations.push({

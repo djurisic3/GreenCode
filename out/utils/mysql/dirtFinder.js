@@ -4,6 +4,7 @@ exports.markSelectSQL = void 0;
 const vscode = require("vscode");
 const primKeysHelper = require("./primaryKeyHelper");
 const primKeysPlSqlHelper = require("../plsql/primaryKeyHelper");
+const counter = require("../counter");
 async function markSelectSQL(document, isLogged, loginData) {
     if (document.languageId !== "sql") {
         return [];
@@ -36,6 +37,7 @@ async function markSelectSQL(document, isLogged, loginData) {
             if (isValidSql && isPrimaryKeyAbsent) {
                 const start = document.positionAt(matchImplicitJoin.index);
                 const end = document.positionAt(implicitJoinRegex.lastIndex);
+                counter.incrementCounter();
                 decorations.push({
                     range: new vscode.Range(start, end),
                     hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
@@ -47,6 +49,7 @@ async function markSelectSQL(document, isLogged, loginData) {
             if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
                 const start = document.positionAt(matchImplicitJoin.index);
                 const end = document.positionAt(implicitJoinRegex.lastIndex);
+                counter.incrementCounter();
                 decorations.push({
                     range: new vscode.Range(start, end),
                     hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
@@ -72,6 +75,7 @@ async function markSelectSQL(document, isLogged, loginData) {
     const updateStatement = /\bupdate\b\s+\b\w+\b\s+\bset\b\s+.+/gim;
     while ((matchUpdate = updateStatement.exec(text)) !== null) {
         if (!/\bwhere\b/i.test(matchUpdate[0])) {
+            counter.incrementCounter();
             const start = document.positionAt(matchUpdate.index);
             const end = document.positionAt(updateStatement.lastIndex);
             decorations.push({
@@ -93,6 +97,7 @@ async function markSelectSQL(document, isLogged, loginData) {
         }
         if (isMysqlLoginData(loginData)) {
             const [tablePrimKeys, isPrimaryKeyAbsent, isValidSql] = await primKeysHelper.checkImplicitPrimKeys(loginData, matchSqlStatements, matchWhere);
+            counter.incrementCounter();
             const start = document.positionAt(matchSqlStatements.index);
             const end = document.positionAt(sqlStatements.lastIndex);
             decorations.push({
@@ -129,6 +134,7 @@ async function markSelectSQL(document, isLogged, loginData) {
         if (isMysqlLoginData(loginData)) {
             const [tablePrimKeys, isPrimaryKeyAbsentExplicit, isValidExplicitSql] = await primKeysHelper.checkExplicitPrimKeys(loginData, matchExplicitJoin, matchJoinOn);
             if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
+                counter.incrementCounter();
                 const start = document.positionAt(matchExplicitJoin.index);
                 const end = document.positionAt(explicitJoinRegex.lastIndex);
                 decorations.push({
@@ -140,6 +146,7 @@ async function markSelectSQL(document, isLogged, loginData) {
         else if (isPlsqlLoginData(loginData)) {
             const [tablePrimKeys, isPrimaryKeyAbsentExplicit, isValidExplicitSql] = await primKeysPlSqlHelper.checkExplicitPrimKeys(loginData, matchExplicitJoin, matchJoinOn);
             if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
+                counter.incrementCounter();
                 const start = document.positionAt(matchExplicitJoin.index);
                 const end = document.positionAt(explicitJoinRegex.lastIndex);
                 decorations.push({

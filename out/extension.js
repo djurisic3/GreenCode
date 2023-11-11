@@ -15,6 +15,7 @@ const hoverProvider_1 = require("./utils/mysql/hoverProvider");
 const hoverProvider_2 = require("./utils/plsql/hoverProvider");
 const sqlFileSearch = require("./utils/mysql/sqlFileSearch");
 const criticalDirt = require("./utils/mysql/dirtFinderCritical");
+const counter = require("./utils/counter");
 let decorationTypeForLoop;
 let decorationTypeCsv;
 let decorationTypeSql;
@@ -47,13 +48,21 @@ function updateDecorationsMiscellaneous() {
 }
 async function updateDecorationsSql() {
     activeEditor = vscode.window.activeTextEditor;
+    counter.resetCounter();
+    counter.resetCounterCritical();
     if (!activeEditor) {
         return;
     }
     const selectStarDecoration = criticalDirt.findSelectAsteriskStatements(activeEditor.document);
     activeEditor.setDecorations(decorationTypeSqlCritical, selectStarDecoration);
+    if (selectStarDecoration) {
+        vscode.window.showInformationMessage(`High Severity: ${counter.getCounterCritical()} spots need eco-efficient optimization.`);
+    }
     let isLogged = false;
     let decorations = await sqlFinder.markSelectSQL(activeEditor.document, isLogged, loginData);
+    if (decorations) {
+        vscode.window.showInformationMessage(`Medium Severity: ${counter.getCounter()} spots need eco-efficient optimization.`);
+    }
     activeEditor.setDecorations(decorationTypeSql, decorations);
 }
 function deactivateDecorationsForLoop() {
@@ -245,7 +254,7 @@ async function activate(context) {
     });
     context.subscriptions.push(decorationTypeSql);
     decorationTypeSqlCritical = vscode.window.createTextEditorDecorationType({
-        textDecoration: "underline dashed red"
+        textDecoration: "underline dashed red",
     });
     context.subscriptions.push(decorationTypeSqlCritical);
     decorationTypeCsv = vscode.window.createTextEditorDecorationType({

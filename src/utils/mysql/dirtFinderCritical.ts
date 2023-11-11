@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 import { Parser } from "node-sql-parser";
+import * as counter from "../counter"
+
+let globalCriticalOccurrenceCounter = 0;
 
 export function findSelectAsteriskStatements(
   document: vscode.TextDocument
@@ -187,6 +190,9 @@ export function findSelectAsteriskStatements(
         table => usedTables.has(table.name) || (table.alias && usedTables.has(table.alias))
       );
       
+      if (!allTablesUsed) {
+        counter.incrementCounterCritical();
+      }
       // A Cartesian product is present if not all tables are used in the conditions
       return !allTablesUsed;
     }
@@ -230,6 +236,7 @@ export function findSelectAsteriskStatements(
   const sqlStarStatements = /\bselect\s+\*\s+(from|into)\b/gim;
   let matchSqlStar;
   while ((matchSqlStar = sqlStarStatements.exec(text)) !== null) {
+    counter.incrementCounterCritical();
     const start = document.positionAt(matchSqlStar.index);
     const end = document.positionAt(sqlStarStatements.lastIndex);
     decorations.push({
