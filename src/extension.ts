@@ -94,11 +94,10 @@ async function updateDecorationsSql() {
       );
     }
   }
-
-  activeEditor.setDecorations(decorationTypeSql, decorations);
   if (selectStarDecoration || decorations) {
     isUpdateDecorationsSqlRun = true;
   }
+  activeEditor.setDecorations(decorationTypeSql, decorations);
 }
 
 function deactivateDecorationsForLoop() {
@@ -131,6 +130,7 @@ function deactivateDecorationsSql() {
     return;
   }
   counter.resetCounter();
+  isUpdateDecorationsSqlRun = false;
   activeEditor.setDecorations(decorationTypeSql, []);
 }
 
@@ -140,6 +140,7 @@ function deactivateDecorationsSqlCritical() {
     return;
   }
   counter.resetCounterCritical();
+  isUpdateDecorationsSqlRun = false;
   activeEditor.setDecorations(decorationTypeSqlCritical, []);
   activeEditor.setDecorations(decorationTypeSql, []);
 }

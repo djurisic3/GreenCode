@@ -4,7 +4,7 @@ exports.activate = void 0;
 const vscode = require("vscode");
 const conversions = require("./utils/python/conversions");
 const pythonFinder = require("./utils/python/dirtFinder");
-const sqlFinder = require("./utils/mysql/dirtFinder");
+const sqlFinder = require("./utils/helper/dirtFinder");
 const hover = require("./utils/python/hoverProvider");
 const pyCode = require("./utils/python/codeReplacement");
 const mysqlCode = require("./utils/mysql/codeReplacement");
@@ -14,14 +14,18 @@ const loginManager_2 = require("./utils/mysql/loginManager");
 const hoverProvider_1 = require("./utils/mysql/hoverProvider");
 const hoverProvider_2 = require("./utils/plsql/hoverProvider");
 const sqlFileSearch = require("./utils/mysql/sqlFileSearch");
-const criticalDirt = require("./utils/mysql/dirtFinderCritical");
-const counter = require("./utils/counter");
+const criticalDirt = require("./utils/helper/dirtFinderCritical");
+const counter = require("./utils/helper/counter");
 let decorationTypeForLoop;
 let decorationTypeCsv;
 let decorationTypeSql;
 let decorationTypeSqlCritical;
 let decorationTypeMiscellaneous;
 let activeEditor;
+let isUpdateDecorationsSqlRun = false;
+function initialSqlDecorationSetup() {
+    updateDecorationsSql();
+}
 function updateDecorationsForLoop() {
     activeEditor = vscode.window.activeTextEditor;
     if (!activeEditor) {
@@ -55,13 +59,18 @@ async function updateDecorationsSql() {
     }
     const selectStarDecoration = criticalDirt.findSelectAsteriskStatements(activeEditor.document);
     activeEditor.setDecorations(decorationTypeSqlCritical, selectStarDecoration);
-    if (selectStarDecoration) {
-        vscode.window.showInformationMessage(`High Severity: ${counter.getCounterCritical()} spots need eco-efficient optimization.`);
-    }
     let isLogged = false;
     let decorations = await sqlFinder.markSelectSQL(activeEditor.document, isLogged, loginData);
-    if (decorations) {
-        vscode.window.showInformationMessage(`Medium Severity: ${counter.getCounter()} spots need eco-efficient optimization.`);
+    if (!isUpdateDecorationsSqlRun) {
+        if (counter.getCounterCritical() > 0) {
+            vscode.window.showInformationMessage(`High Severity: ${counter.getCounterCritical()} spots need eco-efficient optimization.`);
+        }
+        if (counter.getCounter() > 0) {
+            vscode.window.showInformationMessage(`Medium Severity: ${counter.getCounter()} spots need eco-efficient optimization.`);
+        }
+    }
+    if (selectStarDecoration || decorations) {
+        isUpdateDecorationsSqlRun = true;
     }
     activeEditor.setDecorations(decorationTypeSql, decorations);
 }
@@ -91,6 +100,8 @@ function deactivateDecorationsSql() {
     if (!activeEditor) {
         return;
     }
+    counter.resetCounter();
+    isUpdateDecorationsSqlRun = false;
     activeEditor.setDecorations(decorationTypeSql, []);
 }
 function deactivateDecorationsSqlCritical() {
@@ -98,6 +109,8 @@ function deactivateDecorationsSqlCritical() {
     if (!activeEditor) {
         return;
     }
+    counter.resetCounterCritical();
+    isUpdateDecorationsSqlRun = false;
     activeEditor.setDecorations(decorationTypeSqlCritical, []);
     activeEditor.setDecorations(decorationTypeSql, []);
 }
@@ -271,7 +284,7 @@ async function activate(context) {
             vscode.window.showErrorMessage("Missing server type or login data. Please provide this information and try again.");
         }
         else {
-            updateDecorationsSql();
+            initialSqlDecorationSetup();
         }
         updateDecorationsForLoop(),
             updateDecorationsCsv(),
@@ -312,11 +325,11 @@ async function activate(context) {
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((editor) => {
         activeEditor = editor;
         if (editor) {
-            updateDecorationsSql();
+            initialSqlDecorationSetup();
         }
     }), vscode.workspace.onDidChangeTextDocument((event) => {
         if (activeEditor && event.document === activeEditor.document) {
-            updateDecorationsSql();
+            initialSqlDecorationSetup();
         }
     }));
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((editor) => {
