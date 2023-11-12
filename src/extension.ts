@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as conversions from "./utils/python/conversions";
 import * as pythonFinder from "./utils/python/dirtFinder";
-import * as sqlFinder from "./utils/mysql/dirtFinder";
+import * as sqlFinder from "./utils/helper/dirtFinder";
 import * as hover from "./utils/python/hoverProvider";
 import * as pyCode from "./utils/python/codeReplacement";
 import * as mysqlCode from "./utils/mysql/codeReplacement";
@@ -17,8 +17,8 @@ import {
   sqlImplicitJoinHover as plsqlImplicitJoinHover,
 } from "./utils/plsql/hoverProvider";
 import * as sqlFileSearch from "./utils/mysql/sqlFileSearch";
-import * as criticalDirt from "./utils/mysql/dirtFinderCritical";
-import * as counter from "./utils/counter";
+import * as criticalDirt from "./utils/helper/dirtFinderCritical";
+import * as counter from "./utils/helper/counter";
 
 let decorationTypeForLoop: vscode.TextEditorDecorationType;
 let decorationTypeCsv: vscode.TextEditorDecorationType;
@@ -26,6 +26,12 @@ let decorationTypeSql: vscode.TextEditorDecorationType;
 let decorationTypeSqlCritical: vscode.TextEditorDecorationType;
 let decorationTypeMiscellaneous: vscode.TextEditorDecorationType;
 let activeEditor: vscode.TextEditor | undefined;
+
+let isUpdateDecorationsSqlRun = false;
+
+function initialSqlDecorationSetup() {
+  updateDecorationsSql();
+}
 
 function updateDecorationsForLoop() {
   activeEditor = vscode.window.activeTextEditor;
@@ -68,12 +74,6 @@ async function updateDecorationsSql() {
 
   activeEditor.setDecorations(decorationTypeSqlCritical, selectStarDecoration);
 
-  if (selectStarDecoration) {
-    vscode.window.showInformationMessage(
-      `High Severity: ${counter.getCounterCritical()} spots need eco-efficient optimization.`
-    );
-  }
-
   let isLogged = false;
   let decorations = await sqlFinder.markSelectSQL(
     activeEditor.document,
@@ -81,12 +81,24 @@ async function updateDecorationsSql() {
     loginData!
   );
 
-  if (decorations) {
-    vscode.window.showInformationMessage(
-      `Medium Severity: ${counter.getCounter()} spots need eco-efficient optimization.`
-    );
+  if (!isUpdateDecorationsSqlRun) {
+    if (counter.getCounterCritical() > 0) {
+      vscode.window.showInformationMessage(
+        `High Severity: ${counter.getCounterCritical()} spots need eco-efficient optimization.`
+      );
+    }
+
+    if (counter.getCounter() > 0) {
+      vscode.window.showInformationMessage(
+        `Medium Severity: ${counter.getCounter()} spots need eco-efficient optimization.`
+      );
+    }
   }
+
   activeEditor.setDecorations(decorationTypeSql, decorations);
+  if (selectStarDecoration || decorations) {
+    isUpdateDecorationsSqlRun = true;
+  }
 }
 
 function deactivateDecorationsForLoop() {
@@ -118,6 +130,7 @@ function deactivateDecorationsSql() {
   if (!activeEditor) {
     return;
   }
+  counter.resetCounter();
   activeEditor.setDecorations(decorationTypeSql, []);
 }
 
@@ -126,6 +139,7 @@ function deactivateDecorationsSqlCritical() {
   if (!activeEditor) {
     return;
   }
+  counter.resetCounterCritical();
   activeEditor.setDecorations(decorationTypeSqlCritical, []);
   activeEditor.setDecorations(decorationTypeSql, []);
 }
@@ -401,7 +415,7 @@ export async function activate(context: vscode.ExtensionContext) {
           "Missing server type or login data. Please provide this information and try again."
         );
       } else {
-        updateDecorationsSql();
+        initialSqlDecorationSetup();
       }
       updateDecorationsForLoop(),
         updateDecorationsCsv(),
@@ -456,12 +470,12 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       activeEditor = editor;
       if (editor) {
-        updateDecorationsSql();
+        initialSqlDecorationSetup();
       }
     }),
     vscode.workspace.onDidChangeTextDocument((event) => {
       if (activeEditor && event.document === activeEditor.document) {
-        updateDecorationsSql();
+        initialSqlDecorationSetup();
       }
     })
   );
