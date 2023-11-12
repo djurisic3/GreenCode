@@ -1,71 +1,46 @@
-# greencode README
+# GreenCode - Visual Studio Code Extension
 
-This is the README for your extension "greencode". After writing up a brief description, we recommend including the following sections.
+GreenCode is a powerful Visual Studio Code extension that enhances your coding efficiency and promotes eco-friendly programming practices. It provides real-time insights into your code, highlighting opportunities for optimization and helping you write cleaner, more efficient code.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Efficient Code Analysis**: Scans SQL queries and other code sections for optimization opportunities.
+- **Severity Indicators**: Highlights code with potential issues using color-coded severity levels.
+  - **High Severity (Red)**: Immediate replacement opportunities without functional compromise.
+  - **Medium Severity (Yellow)**: Suggested optimizations that might require careful consideration.
+- **One-Time Information Messages**: Displays the number of high and medium severity issues upon activation, and also upon deactivation and reactivation.
+- **SQL File Support**: When working with SQL files, prompts for login data for database-specific analysis.
 
-For example if there is an image subfolder under your extension project workspace:
+## Extension Commands
 
-\!\[feature X\]\(images/feature-x.png\)
+GreenCode introduces several commands with convenient keybindings:
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- `greencode.markDirtyCode`: Activates the extension. Keybinding: `Shift + Ctrl + Alt + F`
+- `greencode.deactivateMarkDirtyCode`: Deactivates the extension. Keybinding: `Shift + Ctrl + Alt + D`
+- `greencode.cleanMarkedCode`: Replaces identified issues with optimized code. Keybinding: `Ctrl + Space`
+- `greencode.promptLoginData`: Prompts for login data when working with SQL files.
 
-## Requirements
+## Getting Started
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+1. **Install** the extension from the Visual Studio Code Marketplace.
+2. **Activate** GreenCode using `Shift + Ctrl + Alt + F`.
+3. For **SQL files**, enter your login details as prompted.
+4. **Review** the highlighted issues and consider the suggested optimizations.
+5. **Deactivate** the extension with `Shift + Ctrl + Alt + D` if needed.
+6. **Apply** optimizations to enhance your code's efficiency and eco-friendliness.
 
-## Extension Settings
+## Contributing
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+Your contributions to improve GreenCode are highly appreciated. Whether it's bug reporting, feature suggestion, or code contribution, feel free to open an issue or submit a pull request on our GitHub repository.
 
-For example:
+## License
 
-This extension contributes the following settings:
+GreenCode is made available under the [MIT License](LICENSE).
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+## About
 
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+GreenCode is developed with the aim of helping programmers write more efficient and environmentally responsible code, contributing to a greener and more sustainable future in software development.
 
 ---
 
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+For more information, visit [our GitHub repository](https://github.com/your-github-username/greencode).
