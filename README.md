@@ -18,7 +18,6 @@ GreenCode introduces several commands with convenient keybindings:
 - `greencode.markDirtyCode`: Activates the extension. Keybinding: `Shift + Ctrl + Alt + F`
 - `greencode.deactivateMarkDirtyCode`: Deactivates the extension. Keybinding: `Shift + Ctrl + Alt + D`
 - `greencode.cleanMarkedCode`: Replaces identified issues with optimized code. Keybinding: `Ctrl + Space`
-- `greencode.promptLoginData`: Prompts for login data when working with SQL files.
 
 ## Getting Started
 
