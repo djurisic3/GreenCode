@@ -4,8 +4,9 @@ exports.checkExistingIndexes = exports.findIndexCandidates = exports.findPrimary
 const oracledb = require("oracledb");
 const conn = require("./loginManager");
 const vscode = require("vscode");
+const path = require("path");
 oracledb.initOracleClient({
-    libDir: "C:\\Users\\dario\\Downloads\\instantclient-basic-windows.x64-21.10.0.0.0dbru\\instantclient_21_10",
+    libDir: path.join(__dirname, '/instantclient-basic-windows.x64-21.10.0.0.0dbru/instantclient_21_10'),
 });
 async function openConnection(user, password, connectString) {
     try {

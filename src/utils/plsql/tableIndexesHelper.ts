@@ -1,10 +1,19 @@
 import * as oracledb from "oracledb";
 import * as conn from "./loginManager";
 import * as vscode from "vscode";
+import * as path from "path";
+
+interface IndexRow {
+  TABLE_NAME: string;
+  COLUMN_NAME: string;
+}
+
+interface CardinalityRow {
+  CARDINALITY: number;
+}
 
 oracledb.initOracleClient({
-  libDir:
-    "C:\\Users\\dario\\Downloads\\instantclient-basic-windows.x64-21.10.0.0.0dbru\\instantclient_21_10",
+  libDir: path.join(__dirname, '/instantclient-basic-windows.x64-21.10.0.0.0dbru/instantclient_21_10'),
 });
 
 export async function openConnection(
@@ -84,7 +93,7 @@ export async function findPrimaryKeys(
   const primaryKeyMap: { [tableName: string]: string[] } = {};
 
   if (result.rows && Array.isArray(result.rows)) {
-    for (let row of result.rows) {
+    for (let row of result.rows as IndexRow[]) {
       const tableName = row.TABLE_NAME;
       const columnName = row.COLUMN_NAME;
       if (!primaryKeyMap[tableName]) {
@@ -120,7 +129,7 @@ export async function findIndexCandidates(
     );
 
     if (result.rows && Array.isArray(result.rows)) {
-      const cardinality = result.rows[0].CARDINALITY;
+      const cardinality = (result.rows[0] as CardinalityRow).CARDINALITY;
       if (!cardinalityMap[table]) {
         cardinalityMap[table] = {};
       }
@@ -153,7 +162,7 @@ export async function checkExistingIndexes(
   );
   await connection.close();
 
-  return result.rows && Array.isArray(result.rows) && result.rows.length > 0
+  return result.rows && Array.isArray(result.rows) && (result.rows as IndexRow[]).length > 0
     ? true
     : false;
 }
