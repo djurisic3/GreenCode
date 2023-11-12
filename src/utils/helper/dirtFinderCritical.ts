@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { Parser } from "node-sql-parser";
-import * as counter from "../counter"
+import * as counter from "./counter"
 
 let globalCriticalOccurrenceCounter = 0;
 
@@ -55,7 +55,7 @@ export function findSelectAsteriskStatements(
       ast = parser.astify(query); // parse the query to get AST
     } catch (error) {
       // handle any parsing errors
-      console.error("Error parsing query: ", error);
+      //console.error("Error parsing query: ", error);
       continue;
     }
 

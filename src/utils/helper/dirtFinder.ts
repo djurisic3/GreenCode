@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
-import * as primKeysHelper from "./primaryKeyHelper";
+import * as primKeysHelper from "../mysql/primaryKeyHelper";
 import * as primKeysPlSqlHelper from "../plsql/primaryKeyHelper";
-import * as counter from "../counter";
+import * as counter from "./counter";
 
 
 export async function markSelectSQL(
