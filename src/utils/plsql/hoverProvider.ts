@@ -13,7 +13,7 @@ export class sqlImplicitJoinHover implements vscode.HoverProvider {
   ): vscode.ProviderResult<vscode.Hover> {
     let text = document.getText();
     let matches = text.matchAll(
-      /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(?=\s*;|\s*\))/gim
+      /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*(\([^)]*\)|[\s\S]+?))(?:\s*(AND|OR)\s+(\w+(\.\w+)?\s*=\s*(\([^)]*\)|[\s\S]+?)))*))?(?:\s*;)?[^\S\r\n]*$/gim
       );
 
     for (const match of matches) {
@@ -27,7 +27,7 @@ export class sqlImplicitJoinHover implements vscode.HoverProvider {
         this.currentImplicitSql = match[0];
         this.currentImplicitSqlRange = range;
         let markdownString = new vscode.MarkdownString(
-          `Click [here](command:greencode.cleanMarkedCode) to make your code greener or press ctrl + space.`
+          `Press ctrl + space to add primary key columns`
         );
         markdownString.isTrusted = true;
         return new vscode.Hover(markdownString);
@@ -80,7 +80,7 @@ export class sqlExplicitJoinHover implements vscode.HoverProvider {
                 ]) => {
                   if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
                     let markdownString = new vscode.MarkdownString(
-                      `Click [here](command:greencode.cleanMarkedCode) to make your code greener or press ctrl + space.`
+                      `Press ctrl + space to add primary key columns`
                     );
                     markdownString.isTrusted = true;
                     return new vscode.Hover(markdownString);

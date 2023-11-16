@@ -207,7 +207,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   activeEditor = vscode.window.activeTextEditor;
 
-  if (activeEditor?.document.languageId !== "python") {
+  if (activeEditor?.document.languageId.includes("sql")) {
     serverType = await vscode.window.showQuickPick(
       ["Oracle (PL/SQL)", "MySQL"],
       {

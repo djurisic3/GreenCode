@@ -1,5 +1,6 @@
 import * as mysql from "mysql";
 import { getPool } from './dbPool';
+import * as vscode from "vscode";
 
 export async function findPrimaryKeys(
   uniqueTableNames: string[],
@@ -8,48 +9,56 @@ export async function findPrimaryKeys(
   password: string,
   database: string
 ): Promise<{ [tableName: string]: string[] }> {
-  return new Promise<{ [tableName: string]: string[] }>((resolve, reject) => {
-    const pool = getPool(host, user, password, database);
+  return new Promise<{ [tableName: string]: string[] }>(async (resolve, reject) => {
+    try {
+      const pool = getPool(host, user, password, database);
 
-    pool.getConnection((err, connection) => {
-      if (err) {
-        console.error("Error connecting to MySQL: ", err.stack);
-        reject("no connection to server");
-      }
+      pool.getConnection((err, connection) => {
+        if (err) {
+          console.error("Error connecting to MySQL: ", err.stack);
+          vscode.window.showErrorMessage(`Error connecting to MySQL: ${err.message}`);
+          reject("no connection to server");
+        } else {
+          console.log("Connected to MySQL as id ", connection.threadId);
 
-      console.log("Connected to MySQL as id ", connection.threadId);
+          const primaryKeyMap: { [tableName: string]: string[] } = {};
 
-      const primaryKeyMap: { [tableName: string]: string[] } = {};
+          connection.query(
+            `SELECT column_name, table_name
+             FROM information_schema.key_column_usage
+             WHERE table_name IN (${uniqueTableNames
+               .map((name) => `'${name}'`)
+               .join(",")})
+             AND constraint_name = 'PRIMARY'`,
+            (err, res) => {
+              connection.release();
 
-      connection.query(
-        `SELECT column_name, table_name
-         FROM information_schema.key_column_usage
-         WHERE table_name IN (${uniqueTableNames
-           .map((name) => `'${name}'`)
-           .join(",")})
-         AND constraint_name = 'PRIMARY'`,
-        (err, res, fld) => {
-          if (err) {
-            console.error("Error fetching primary keys: ", err);
-            reject("no primary keys found for tables");
-          }
+              if (err) {
+                console.error("Error fetching primary keys: ", err);
+                vscode.window.showErrorMessage(`Error fetching primary keys: ${err.message}`);
+                reject("no primary keys found for tables");
+              } else {
+                res.forEach((row: { COLUMN_NAME: any; TABLE_NAME: any }) => {
+                  const columnName = row.COLUMN_NAME;
+                  const tableName = row.TABLE_NAME;
+                  if (primaryKeyMap[tableName]) {
+                    primaryKeyMap[tableName].push(columnName);
+                  } else {
+                    primaryKeyMap[tableName] = [columnName];
+                  }
+                });
 
-          connection.release();
-
-          res.forEach((row: { COLUMN_NAME: any; TABLE_NAME: any }) => {
-            const columnName = row.COLUMN_NAME;
-            const tableName = row.TABLE_NAME;
-            if (primaryKeyMap[tableName]) {
-              primaryKeyMap[tableName].push(columnName);
-            } else {
-              primaryKeyMap[tableName] = [columnName];
+                resolve(primaryKeyMap);
+              }
             }
-          });
-
-          resolve(primaryKeyMap);
+          );
         }
-      ); 
-    });
+      });
+    } catch (err) {
+      console.error('An error occurred: ', err);
+      vscode.window.showErrorMessage('An unexpected error occurred: ');
+      reject('An unexpected error occurred');
+    }
   });
 }
 

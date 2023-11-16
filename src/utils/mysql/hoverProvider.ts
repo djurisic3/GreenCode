@@ -42,7 +42,7 @@ export class sqlImplicitJoinHover implements vscode.HoverProvider {
               .then(([tablePrimKeys, isPrimaryKeyAbsent, isValidSql]) => {
                 if (isValidSql && isPrimaryKeyAbsent) {
                   let markdownString = new vscode.MarkdownString(
-                    `Click [here](command:greencode.cleanMarkedCode) to make your code greener or press ctrl + space.`
+                    `Press ctrl + space to add primary key columns`
                   );
                   markdownString.isTrusted = true;
                   return new vscode.Hover(markdownString);
@@ -101,7 +101,7 @@ export class sqlExplicitJoinHover implements vscode.HoverProvider {
                 ]) => {
                   if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
                     let markdownString = new vscode.MarkdownString(
-                      `Click [here](command:greencode.cleanMarkedCode) to make your code greener or press ctrl + space.`
+                      `Press ctrl + space to add primary key columns`
                     );
                     markdownString.isTrusted = true;
                     return new vscode.Hover(markdownString);

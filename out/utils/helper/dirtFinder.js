@@ -13,7 +13,7 @@ async function markSelectSQL(document, isLogged, loginData) {
     let decorations = [];
     let matchImplicitJoin;
     let matchWhere;
-    const implicitJoinRegex = /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*\)?\s*$/gim;
+    const implicitJoinRegex = /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*(\([^)]*\)|[\s\S]+?))(?:\s*(AND|OR)\s+(\w+(\.\w+)?\s*=\s*(\([^)]*\)|[\s\S]+?)))*))?(?:\s*;)?[^\S\r\n]*$/gim;
     while ((matchImplicitJoin = implicitJoinRegex.exec(text)) !== null) {
         if (matchImplicitJoin[13] === undefined) {
             matchWhere = "";
@@ -57,19 +57,6 @@ async function markSelectSQL(document, isLogged, loginData) {
             }
         }
     }
-    // SELECT *
-    // let matchSqlStar;
-    // const sqlStarStatements = /\bselect\s+\*\s+(from|into)\b/gim;
-    // while ((matchSqlStar = sqlStarStatements.exec(text)) !== null) {
-    //   decorations.push();
-    //   const start = document.positionAt(matchSqlStar.index);
-    //   const end = document.positionAt(sqlStarStatements.lastIndex);
-    //   decorations.push({
-    //     range: new vscode.Range(start, end),
-    //     hoverMessage: `Use column names instead of the "*" wildcard character.   \nYou can save up to 40% in energy per statement call when using only relevant columns.`,
-    //   });
-    // }
-    // SELECT *
     // UPDATE WITHOUT WHERE
     let matchUpdate;
     const updateStatement = /\bupdate\b\s+\b\w+\b\s+\bset\b\s+.+/gim;

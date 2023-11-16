@@ -233,7 +233,7 @@ export function findSelectAsteriskStatements(
   //
 
   // SELECT * logic
-  const sqlStarStatements = /\bselect\s+\*\s+(from|into)\b/gim;
+  const sqlStarStatements = /\bselect\s+(?:\w+\.)?\*\s+(from|into)\b/gim;
   let matchSqlStar;
   while ((matchSqlStar = sqlStarStatements.exec(text)) !== null) {
     counter.incrementCounterCritical();

@@ -7,8 +7,6 @@ import {
 } from "./primaryKeyHelper";
 import { getLoginDataPlSql } from "./loginManager";
 
-
-
 export async function sqlImplicitJoinHoverReplacement(
   currentSqlHover: hover.sqlImplicitJoinHover
 ) {
@@ -126,7 +124,7 @@ export async function sqlImplicitJoinCursorReplacement(
   let matchImplicitJoin;
   let matchWhere: string;
   const implicitJoinRegex =
-    /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
+    /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*(\([^)]*\)|[\s\S]+?))(?:\s*(AND|OR)\s+(\w+(\.\w+)?\s*=\s*(\([^)]*\)|[\s\S]+?)))*))?(?:\s*;)?[^\S\r\n]*$/gim;
 
   const position = editor.selection.active;
 
@@ -138,7 +136,7 @@ export async function sqlImplicitJoinCursorReplacement(
 
   let [implicitJoinCursor, implicitJoinRange] = implicitJoinCursorAndRange;
 
-  implicitJoinCursor = implicitJoinCursor.toString()/*.trim()*/;
+  implicitJoinCursor = implicitJoinCursor.toString();
 
   if (!implicitJoinCursor) {
     return;
@@ -171,7 +169,7 @@ export async function sqlImplicitJoinCursorReplacement(
 
       if (isValidSql) {
         replacedCode = implicitJoinCursor.replace(
-          /\bWHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*)/gim,
+          /\bWHERE\s+(\w+(\.\w+)?\s*=\s*('[^']*'|"[^"]*"|[\w.]+(\('[^']+'\)|\("[^"]+"\)|\(\d+\))?|[^ \nANDOR]+))(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*('[^']*'|"[^"]*"|[\w.]+(\('[^']+'\)|\("[^"]+"\)|\(\d+\))?|[^ \nANDOR]+)))*/gim,
           (match) => {
             let newConditions = [];
 
@@ -199,13 +197,24 @@ export async function sqlImplicitJoinCursorReplacement(
               .split(/\s+(?:AND|OR)\s+/);
             const newConditionsSet = new Set(newConditions);
 
+            let endChar = "";
+            if (match.endsWith(";")) {
+              // Remove the last character (semicolon) and store it
+              endChar = ";";
+              match = match.slice(0, -1);
+            } else if (match.endsWith(")")) {
+              // Remove the last character (closing bracket) and store it
+              endChar = ")";
+              match = match.slice(0, -1);
+            }
+
             if (
               newConditions.length > 0 &&
               !currentConditions.every((cond) => newConditionsSet.has(cond))
             ) {
-              return `${match} AND ${newConditions.join(" AND ")}`;
+              return `${match} AND ${newConditions.join(" AND ")}${endChar}`;
             } else {
-              return match;
+              return match + endChar;
             }
           }
         );
@@ -248,7 +257,8 @@ export async function sqlExplicitJoinHoverReplacement(
   let matchExplicitJoin;
   let matchJoin: string;
 
-  const explicitJoinRegex = /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;
+  const explicitJoinRegex =
+    /\bSELECT\b\s*(?:(?!\bFROM\b).)*(?:\bFROM\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*\s+)((?:\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))(?:\s*\b(?:INNER\s+)?JOIN\b\s+(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?\s+\bON\b\s+(((\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+'))(\s*(AND|OR)\s*(\w+(\.\w+)?\s*=\s*(?:\w+(\.\w+)?|'(?:\s|\w)+')))*)))*)+(\s*;)?\s*$/gim;
 
   // We utilize the hover range provided by currentSqlHover for our hover functionality
   const hoverRange = currentSqlHover.currentExplicitSqlRange;
@@ -299,7 +309,8 @@ export async function sqlExplicitJoinHoverReplacement(
             const primaryKeys = primaryKeyMap[tableName];
             const tableAlias =
               Array.from(tableAliasMap.entries()).find(
-                ([alias, actualTableName]) => actualTableName === tableName.toLocaleLowerCase() // toLocaleLowerCase because PLSQL saves tables in upper case
+                ([alias, actualTableName]) =>
+                  actualTableName === tableName.toLocaleLowerCase() // toLocaleLowerCase because PLSQL saves tables in upper case
               )?.[0] || tableName;
 
             for (const primaryKey of primaryKeys) {

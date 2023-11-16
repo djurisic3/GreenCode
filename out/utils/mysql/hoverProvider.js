@@ -24,7 +24,7 @@ class sqlImplicitJoinHover {
                             .checkImplicitPrimKeys(loginData, match, matchWhere)
                             .then(([tablePrimKeys, isPrimaryKeyAbsent, isValidSql]) => {
                             if (isValidSql && isPrimaryKeyAbsent) {
-                                let markdownString = new vscode.MarkdownString(`Click [here](command:greencode.cleanMarkedCode) to make your code greener or press ctrl + space.`);
+                                let markdownString = new vscode.MarkdownString(`Press ctrl + space to add primary key columns`);
                                 markdownString.isTrusted = true;
                                 return new vscode.Hover(markdownString);
                             }
@@ -58,7 +58,7 @@ class sqlExplicitJoinHover {
                             .checkExplicitPrimKeys(loginData, match, matchJoinOn)
                             .then(([tablePrimKeys, isPrimaryKeyAbsentExplicit, isValidExplicitSql,]) => {
                             if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
-                                let markdownString = new vscode.MarkdownString(`Click [here](command:greencode.cleanMarkedCode) to make your code greener or press ctrl + space.`);
+                                let markdownString = new vscode.MarkdownString(`Press ctrl + space to add primary key columns`);
                                 markdownString.isTrusted = true;
                                 return new vscode.Hover(markdownString);
                             }

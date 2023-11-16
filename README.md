@@ -1,6 +1,6 @@
 # GreenCode - Visual Studio Code Extension
 
-GreenCode is a powerful Visual Studio Code extension that enhances your coding efficiency and promotes eco-friendly programming practices. It provides real-time insights into your code, highlighting opportunities for optimization and helping you write cleaner, more efficient code.
+GreenCode is a powerful Visual Studio Code extension that enhances your coding efficiency and promotes eco-friendly programming practices. It provides real-time insights into your code, highlighting opportunities for optimization and helping you write cleaner, more efficient code. Embrace cleaner coding practices that not only boost performance but also contribute to a greener planet.
 
 ## Features
 

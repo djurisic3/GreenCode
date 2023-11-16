@@ -13,7 +13,7 @@ interface CardinalityRow {
 }
 
 oracledb.initOracleClient({
-  libDir: path.join(__dirname, '/instantclient-basic-windows.x64-21.10.0.0.0dbru/instantclient_21_10'),
+  libDir: path.join(__dirname, '/instantclient_21_10'),
 });
 
 export async function openConnection(

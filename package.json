@@ -1,19 +1,36 @@
 {
   "name": "greencode",
   "displayName": "GreenCode",
-  "description": "Replacing code with the most power saving one.",
+  "description": "Elevate your coding efficiency with GreenCode – smartly optimizing for reduced energy consumption.",
   "publisher": "GreenCode",
+  "icon": "images/greencode_vscode_logo.png",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Programming Languages",
+    "Linters",
+    "Snippets"
+  ],
+  "keywords": [
+    "eco-friendly",
+    "sustainability",
+    "green coding",
+    "code optimization",
+    "performance",
+    "energy saving",
+    "efficient coding",
+    "SQL",
+    "PL/SQL",
+    "MySQL"
   ],
   "activationEvents": [
     "onCommand:greencode.markDirtyCode",
     "onCommand:deactivateMarkDirtyCode"
   ],
+  
   "repository": {
     "type": "git",
     "url": "https://github.com/djurisic3/GreenCode.git"
@@ -56,6 +73,9 @@
       }
     ]
   },
+  "bugs": {
+    "url": "https://github.com/djurisic3/GreenCode/issues"
+},
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
