@@ -16,13 +16,54 @@ const hoverProvider_2 = require("./utils/plsql/hoverProvider");
 const sqlFileSearch = require("./utils/mysql/sqlFileSearch");
 const criticalDirt = require("./utils/helper/dirtFinderCritical");
 const counter = require("./utils/helper/counter");
+const codeLocationStorage_1 = require("./utils/plsql/codeLocationStorage");
 let decorationTypeForLoop;
 let decorationTypeCsv;
 let decorationTypeSql;
 let decorationTypeSqlCritical;
 let decorationTypeMiscellaneous;
 let activeEditor;
+let statusBarMessageMedium;
+let statusBarMessageHigh;
 let isUpdateDecorationsSqlRun = false;
+function updateStatusBarMessages() {
+    const highCount = counter.getCounterCritical();
+    const mediumCount = counter.getCounter();
+    if (highCount > 0) {
+        statusBarMessageHigh.text = `High Severity: ${highCount} spots need eco-efficient optimization.`;
+        statusBarMessageHigh.command = "greencode.navigateToNextHighSeverity";
+        statusBarMessageHigh.show();
+    }
+    if (mediumCount > 0) {
+        statusBarMessageMedium.text = `Medium Severity: ${mediumCount} spots need eco-efficient optimization.`;
+        statusBarMessageMedium.command = "greencode.navigateToNextMediumSeverity";
+        statusBarMessageMedium.show();
+    }
+}
+function navigateToNextHighSeverity() {
+    navigateToNextSeverity("high");
+}
+function navigateToNextMediumSeverity() {
+    navigateToNextSeverity("medium");
+}
+function navigateToNextSeverity(severity) {
+    let locations = (0, codeLocationStorage_1.getLocations)(severity);
+    if (locations.length === 0) {
+        vscode.window.showInformationMessage(`No more ${severity} severity spots to navigate to.`);
+        return;
+    }
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+        // Always navigate to the first location in the list
+        const nextLocation = locations[0];
+        editor.selection = new vscode.Selection(nextLocation.start, nextLocation.end);
+        editor.revealRange(nextLocation, vscode.TextEditorRevealType.InCenter);
+        // Remove the navigated location from the list
+        (0, codeLocationStorage_1.removeLocation)(nextLocation, severity);
+        (0, codeLocationStorage_1.addLocation)(nextLocation, severity);
+        updateStatusBarMessages();
+    }
+}
 function initialSqlDecorationSetup() {
     updateDecorationsSql();
 }
@@ -62,12 +103,7 @@ async function updateDecorationsSql() {
     let isLogged = false;
     let decorations = await sqlFinder.markSelectSQL(activeEditor.document, isLogged, loginData);
     if (!isUpdateDecorationsSqlRun) {
-        if (counter.getCounterCritical() > 0) {
-            vscode.window.showInformationMessage(`High Severity: ${counter.getCounterCritical()} spots need eco-efficient optimization.`);
-        }
-        if (counter.getCounter() > 0) {
-            vscode.window.showInformationMessage(`Medium Severity: ${counter.getCounter()} spots need eco-efficient optimization.`);
-        }
+        updateStatusBarMessages();
     }
     if (selectStarDecoration || decorations) {
         isUpdateDecorationsSqlRun = true;
@@ -124,6 +160,11 @@ async function activate(context) {
     let sqlExplicitHoverProvider = new hoverProvider_1.sqlExplicitJoinHover();
     let plsqlExplicitHoverProvider = new hoverProvider_2.sqlExplicitJoinHover();
     let plsqlImplicitHoverProvider = new hoverProvider_2.sqlImplicitJoinHover();
+    statusBarMessageHigh = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    statusBarMessageMedium = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    context.subscriptions.push(vscode.commands.registerCommand("greencode.navigateToNextHighSeverity", navigateToNextHighSeverity));
+    context.subscriptions.push(vscode.commands.registerCommand("greencode.navigateToNextMediumSeverity", navigateToNextMediumSeverity));
+    context.subscriptions.push(statusBarMessageHigh, statusBarMessageMedium);
     const disposableFindAllQueries = vscode.commands.registerCommand("greencode.findSqlQueries", async () => {
         const options = {
             canSelectFiles: false,
@@ -214,11 +255,11 @@ async function activate(context) {
         });
     });
     let disposableCleanMarkedCode = vscode.commands.registerCommand("greencode.cleanMarkedCode", () => {
-        if (!serverType && activeEditor?.document.languageId === "sql") {
+        if (!serverType && activeEditor?.document.languageId.includes("sql")) {
             vscode.window.showErrorMessage("Server type is not defined yet. Please wait a moment and try again.");
             return;
         }
-        console.log("SERVER TYPE: " + serverType);
+        console.log("Server type: " + serverType);
         if (forHoverProvider.currentForLoop !== undefined) {
             pyCode.forHoverReplacement(forHoverProvider);
         }
@@ -280,7 +321,7 @@ async function activate(context) {
     context.subscriptions.push(decorationTypeMiscellaneous);
     let disposableMarkDirtyCode = vscode.commands.registerCommand("greencode.markDirtyCode", () => {
         if ((!serverType || !loginData) &&
-            activeEditor?.document.languageId === "sql") {
+            activeEditor?.document.languageId.includes("sql")) {
             vscode.window.showErrorMessage("Missing server type or login data. Please provide this information and try again.");
         }
         else {
@@ -329,6 +370,8 @@ async function activate(context) {
         }
     }), vscode.workspace.onDidChangeTextDocument((event) => {
         if (activeEditor && event.document === activeEditor.document) {
+            counter.resetCounter();
+            counter.resetCounterCritical();
             initialSqlDecorationSetup();
         }
     }));

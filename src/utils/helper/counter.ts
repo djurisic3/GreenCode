@@ -5,6 +5,10 @@ export function incrementCounter() {
   globalMediumOccurrenceCounter++;
 }
 
+export function decrementCounter() {
+  globalMediumOccurrenceCounter--;
+}
+
 export function resetCounter() {
   globalMediumOccurrenceCounter = 0;
 }
@@ -15,6 +19,10 @@ export function getCounter() {
 
 export function incrementCounterCritical() {
   globalCriticalOccurrenceCounter++;
+}
+
+export function decrementCounterCritical() {
+  globalCriticalOccurrenceCounter--;
 }
 
 export function resetCounterCritical() {

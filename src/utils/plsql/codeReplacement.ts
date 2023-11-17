@@ -6,6 +6,7 @@ import {
   checkImplicitPrimKeys,
 } from "./primaryKeyHelper";
 import { getLoginDataPlSql } from "./loginManager";
+import * as counter from "../helper/counter";
 
 export async function sqlImplicitJoinHoverReplacement(
   currentSqlHover: hover.sqlImplicitJoinHover
@@ -99,6 +100,7 @@ export async function sqlImplicitJoinHoverReplacement(
       );
 
       if (range.contains(editor.selection.active)) {
+        counter.decrementCounter();
         editor.edit((editBuilder) => {
           editBuilder.replace(range, replacedCode);
           currentSqlHover.currentImplicitSql = undefined;
@@ -232,6 +234,7 @@ export async function sqlImplicitJoinCursorReplacement(
 
       // Replace the for loop with the list comprehension
       if ((implicitJoinRange as vscode.Range).contains(position)) {
+        counter.decrementCounter();
         editor.edit((editBuilder) => {
           editBuilder.replace(implicitJoinRange as vscode.Range, replacedCode);
           currentSqlHover.currentImplicitSql = undefined;

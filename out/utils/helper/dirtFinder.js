@@ -5,6 +5,7 @@ const vscode = require("vscode");
 const primKeysHelper = require("../mysql/primaryKeyHelper");
 const primKeysPlSqlHelper = require("../plsql/primaryKeyHelper");
 const counter = require("./counter");
+const codeLocationStorage_1 = require("../plsql/codeLocationStorage");
 async function markSelectSQL(document, isLogged, loginData) {
     if (document.languageId !== "sql") {
         return [];
@@ -38,6 +39,8 @@ async function markSelectSQL(document, isLogged, loginData) {
                 const start = document.positionAt(matchImplicitJoin.index);
                 const end = document.positionAt(implicitJoinRegex.lastIndex);
                 counter.incrementCounter();
+                const savedRange = new vscode.Range(start, end);
+                (0, codeLocationStorage_1.addLocation)(savedRange, "medium");
                 decorations.push({
                     range: new vscode.Range(start, end),
                     hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
@@ -50,6 +53,8 @@ async function markSelectSQL(document, isLogged, loginData) {
                 const start = document.positionAt(matchImplicitJoin.index);
                 const end = document.positionAt(implicitJoinRegex.lastIndex);
                 counter.incrementCounter();
+                const savedRange = new vscode.Range(start, end);
+                (0, codeLocationStorage_1.addLocation)(savedRange, "medium");
                 decorations.push({
                     range: new vscode.Range(start, end),
                     hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
@@ -65,6 +70,8 @@ async function markSelectSQL(document, isLogged, loginData) {
             counter.incrementCounter();
             const start = document.positionAt(matchUpdate.index);
             const end = document.positionAt(updateStatement.lastIndex);
+            const savedRange = new vscode.Range(start, end);
+            (0, codeLocationStorage_1.addLocation)(savedRange, "medium");
             decorations.push({
                 range: new vscode.Range(start, end),
                 hoverMessage: `Avoid UPDATE statements without a WHERE clause.`,
@@ -87,6 +94,8 @@ async function markSelectSQL(document, isLogged, loginData) {
             counter.incrementCounter();
             const start = document.positionAt(matchSqlStatements.index);
             const end = document.positionAt(sqlStatements.lastIndex);
+            const savedRange = new vscode.Range(start, end);
+            (0, codeLocationStorage_1.addLocation)(savedRange, "medium");
             decorations.push({
                 range: new vscode.Range(start, end),
                 hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
@@ -124,6 +133,8 @@ async function markSelectSQL(document, isLogged, loginData) {
                 counter.incrementCounter();
                 const start = document.positionAt(matchExplicitJoin.index);
                 const end = document.positionAt(explicitJoinRegex.lastIndex);
+                const savedRange = new vscode.Range(start, end);
+                (0, codeLocationStorage_1.addLocation)(savedRange, "medium");
                 decorations.push({
                     range: new vscode.Range(start, end),
                     hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
@@ -136,6 +147,8 @@ async function markSelectSQL(document, isLogged, loginData) {
                 counter.incrementCounter();
                 const start = document.positionAt(matchExplicitJoin.index);
                 const end = document.positionAt(explicitJoinRegex.lastIndex);
+                const savedRange = new vscode.Range(start, end);
+                (0, codeLocationStorage_1.addLocation)(savedRange, "medium");
                 decorations.push({
                     range: new vscode.Range(start, end),
                     hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,

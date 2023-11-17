@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { Parser } from "node-sql-parser";
-import * as counter from "./counter"
+import * as counter from "./counter";
+import { addLocation } from "../plsql/codeLocationStorage";
 
 let globalCriticalOccurrenceCounter = 0;
 
@@ -81,6 +82,8 @@ export function findSelectAsteriskStatements(
     if (isCartesianProduct(ast) || isUnusedJoin(ast) || isCrossJoin(ast)) {
       let start = document.positionAt(text.indexOf(query));
       let end = document.positionAt(text.indexOf(query) + query.length);
+      const savedRange = new vscode.Range(start, end);
+      addLocation(savedRange, "high");
       decorations.push({
         range: new vscode.Range(start, end),
         hoverMessage:
@@ -169,27 +172,29 @@ export function findSelectAsteriskStatements(
         if (!condition) {
           return;
         }
-      
+
         // Recursively process binary expressions
-        if (condition.type === 'binary_expr') {
+        if (condition.type === "binary_expr") {
           extractTableNames(condition.left);
           extractTableNames(condition.right);
         }
-      
+
         // Extract table names from column references
-        if (condition.type === 'column_ref') {
+        if (condition.type === "column_ref") {
           usedTables.add(condition.table);
         }
       }
-      
+
       joinConditions.forEach(extractTableNames);
-      
+
       // If not all tables are used in ON conditions, it's a Cartesian product
       // Compare the elements of usedTables with fromTables
       const allTablesUsed = fromTables.every(
-        table => usedTables.has(table.name) || (table.alias && usedTables.has(table.alias))
+        (table) =>
+          usedTables.has(table.name) ||
+          (table.alias && usedTables.has(table.alias))
       );
-      
+
       if (!allTablesUsed) {
         counter.incrementCounterCritical();
       }
@@ -239,6 +244,8 @@ export function findSelectAsteriskStatements(
     counter.incrementCounterCritical();
     const start = document.positionAt(matchSqlStar.index);
     const end = document.positionAt(sqlStarStatements.lastIndex);
+    const savedRange = new vscode.Range(start, end);
+    addLocation(savedRange, "high");
     decorations.push({
       range: new vscode.Range(start, end),
       hoverMessage: `Use column names instead of the "*" wildcard character.   \nYou can save up to 40% in energy per statement call when using only relevant columns.`,

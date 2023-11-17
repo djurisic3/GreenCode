@@ -4,6 +4,7 @@ exports.findSelectAsteriskStatements = void 0;
 const vscode = require("vscode");
 const node_sql_parser_1 = require("node-sql-parser");
 const counter = require("./counter");
+const codeLocationStorage_1 = require("../plsql/codeLocationStorage");
 let globalCriticalOccurrenceCounter = 0;
 function findSelectAsteriskStatements(document) {
     let decorations = [];
@@ -38,6 +39,8 @@ function findSelectAsteriskStatements(document) {
         if (isCartesianProduct(ast) || isUnusedJoin(ast) || isCrossJoin(ast)) {
             let start = document.positionAt(text.indexOf(query));
             let end = document.positionAt(text.indexOf(query) + query.length);
+            const savedRange = new vscode.Range(start, end);
+            (0, codeLocationStorage_1.addLocation)(savedRange, "high");
             decorations.push({
                 range: new vscode.Range(start, end),
                 hoverMessage: "Cartesian product or unused join detected. Please review the query for potential issues.",
@@ -109,19 +112,20 @@ function findSelectAsteriskStatements(document) {
                     return;
                 }
                 // Recursively process binary expressions
-                if (condition.type === 'binary_expr') {
+                if (condition.type === "binary_expr") {
                     extractTableNames(condition.left);
                     extractTableNames(condition.right);
                 }
                 // Extract table names from column references
-                if (condition.type === 'column_ref') {
+                if (condition.type === "column_ref") {
                     usedTables.add(condition.table);
                 }
             }
             joinConditions.forEach(extractTableNames);
             // If not all tables are used in ON conditions, it's a Cartesian product
             // Compare the elements of usedTables with fromTables
-            const allTablesUsed = fromTables.every(table => usedTables.has(table.name) || (table.alias && usedTables.has(table.alias)));
+            const allTablesUsed = fromTables.every((table) => usedTables.has(table.name) ||
+                (table.alias && usedTables.has(table.alias)));
             if (!allTablesUsed) {
                 counter.incrementCounterCritical();
             }
@@ -166,6 +170,8 @@ function findSelectAsteriskStatements(document) {
         counter.incrementCounterCritical();
         const start = document.positionAt(matchSqlStar.index);
         const end = document.positionAt(sqlStarStatements.lastIndex);
+        const savedRange = new vscode.Range(start, end);
+        (0, codeLocationStorage_1.addLocation)(savedRange, "high");
         decorations.push({
             range: new vscode.Range(start, end),
             hoverMessage: `Use column names instead of the "*" wildcard character.   \nYou can save up to 40% in energy per statement call when using only relevant columns.`,
