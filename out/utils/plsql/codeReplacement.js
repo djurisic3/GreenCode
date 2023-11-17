@@ -5,6 +5,7 @@ const vscode = require("vscode");
 const cursor = require("./cursorHelper");
 const primaryKeyHelper_1 = require("./primaryKeyHelper");
 const loginManager_1 = require("./loginManager");
+const counter = require("../helper/counter");
 async function sqlImplicitJoinHoverReplacement(currentSqlHover) {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -53,6 +54,7 @@ async function sqlImplicitJoinHoverReplacement(currentSqlHover) {
                 }
             });
             if (range.contains(editor.selection.active)) {
+                counter.decrementCounter();
                 editor.edit((editBuilder) => {
                     editBuilder.replace(range, replacedCode);
                     currentSqlHover.currentImplicitSql = undefined;
@@ -141,6 +143,7 @@ async function sqlImplicitJoinCursorReplacement(currentSqlHover) {
             }
             // Replace the for loop with the list comprehension
             if (implicitJoinRange.contains(position)) {
+                counter.decrementCounter();
                 editor.edit((editBuilder) => {
                     editBuilder.replace(implicitJoinRange, replacedCode);
                     currentSqlHover.currentImplicitSql = undefined;
