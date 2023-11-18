@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { Parser } from "node-sql-parser";
 import * as counter from "./counter";
-import { addLocation } from "../plsql/codeLocationStorage";
+import { addLocation, clearLocations } from "../plsql/codeLocationStorage";
 
 let globalCriticalOccurrenceCounter = 0;
 
@@ -11,7 +11,7 @@ export function findSelectAsteriskStatements(
   let decorations: vscode.DecorationOptions[] = [];
   let text = document.getText();
 
-  if (document.languageId !== "sql") {
+  if (document.languageId.includes("sql") === false) {
     return [];
   }
 
@@ -78,6 +78,9 @@ export function findSelectAsteriskStatements(
     if (!ast || ast === undefined) {
       return;
     }
+
+    counter.resetCounterCritical(); // reseting counter and locations of high severity code spots
+    clearLocations();
 
     if (isCartesianProduct(ast) || isUnusedJoin(ast) || isCrossJoin(ast)) {
       let start = document.positionAt(text.indexOf(query));

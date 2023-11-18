@@ -49,6 +49,14 @@ function navigateToNextMediumSeverity() {
 function navigateToNextSeverity(severity) {
     let locations = (0, codeLocationStorage_1.getLocations)(severity);
     if (locations.length === 0) {
+        if (severity === "medium") {
+            statusBarMessageMedium.text = `Medium Severity: 0 spots need eco-efficient optimization.`;
+            statusBarMessageMedium.show();
+        }
+        else if (severity === "high") {
+            statusBarMessageMedium.text = `High Severity: 0 spots need eco-efficient optimization.`;
+            statusBarMessageMedium.show();
+        }
         vscode.window.showInformationMessage(`No more ${severity} severity spots to navigate to.`);
         return;
     }
@@ -93,8 +101,6 @@ function updateDecorationsMiscellaneous() {
 }
 async function updateDecorationsSql() {
     activeEditor = vscode.window.activeTextEditor;
-    counter.resetCounter();
-    counter.resetCounterCritical();
     if (!activeEditor) {
         return;
     }
@@ -260,6 +266,8 @@ async function activate(context) {
             return;
         }
         console.log("Server type: " + serverType);
+        plsqlImplicitHoverProvider.currentImplicitSql = undefined;
+        plsqlExplicitHoverProvider.currentExplicitSql = undefined;
         if (forHoverProvider.currentForLoop !== undefined) {
             pyCode.forHoverReplacement(forHoverProvider);
         }
@@ -327,9 +335,9 @@ async function activate(context) {
         else {
             initialSqlDecorationSetup();
         }
-        updateDecorationsForLoop(),
-            updateDecorationsCsv(),
-            updateDecorationsMiscellaneous();
+        //updateDecorationsForLoop(),
+        //  updateDecorationsCsv(),
+        //  updateDecorationsMiscellaneous();
     });
     context.subscriptions.push(disposableMarkDirtyCode);
     let disposableDeactivateMarkDirtyCode = vscode.commands.registerCommand("greencode.deactivateMarkDirtyCode", () => {
@@ -343,26 +351,33 @@ async function activate(context) {
     context.subscriptions.push(disposableDeactivateMarkDirtyCode);
     context.subscriptions.push(disposableCleanMarkedCode);
     context.subscriptions.push(disposableCleanCompleteCode);
-    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((editor) => {
-        activeEditor = editor;
-        if (editor) {
-            updateDecorationsForLoop();
-        }
-    }), vscode.workspace.onDidChangeTextDocument((event) => {
-        if (activeEditor && event.document === activeEditor.document) {
-            updateDecorationsForLoop();
-        }
-    }));
-    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((editor) => {
-        activeEditor = editor;
-        if (editor) {
-            updateDecorationsCsv();
-        }
-    }), vscode.workspace.onDidChangeTextDocument((event) => {
-        if (activeEditor && event.document === activeEditor.document) {
-            updateDecorationsCsv();
-        }
-    }));
+    // context.subscriptions.push(
+    //   vscode.window.onDidChangeActiveTextEditor((editor) => {
+    //     activeEditor = editor;
+    //     if (editor) {
+    //       updateDecorationsForLoop();
+    //     }
+    //   }),
+    //   vscode.workspace.onDidChangeTextDocument((event) => {
+    //     if (activeEditor && event.document === activeEditor.document) {
+    //       updateDecorationsForLoop();
+    //     }
+    //   })
+    // );
+    // context.subscriptions.push(
+    //   vscode.window.onDidChangeActiveTextEditor((editor) => {
+    //     activeEditor = editor;
+    //     if (editor) {
+    //       updateDecorationsCsv();
+    //     }
+    //   }),
+    //   vscode.workspace.onDidChangeTextDocument((event) => {
+    //     if (activeEditor && event.document === activeEditor.document) {
+    //       updateDecorationsCsv();
+    //     }
+    //   })
+    // );
+    let timeout;
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((editor) => {
         activeEditor = editor;
         if (editor) {
@@ -370,21 +385,28 @@ async function activate(context) {
         }
     }), vscode.workspace.onDidChangeTextDocument((event) => {
         if (activeEditor && event.document === activeEditor.document) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                initialSqlDecorationSetup();
+            }, 650);
             counter.resetCounter();
             counter.resetCounterCritical();
             initialSqlDecorationSetup();
         }
     }));
-    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((editor) => {
-        activeEditor = editor;
-        if (editor) {
-            updateDecorationsMiscellaneous();
-        }
-    }), vscode.workspace.onDidChangeTextDocument((event) => {
-        if (activeEditor && event.document === activeEditor.document) {
-            updateDecorationsMiscellaneous();
-        }
-    }));
+    // context.subscriptions.push(
+    //   vscode.window.onDidChangeActiveTextEditor((editor) => {
+    //     activeEditor = editor;
+    //     if (editor) {
+    //       updateDecorationsMiscellaneous();
+    //     }
+    //   }),
+    //   vscode.workspace.onDidChangeTextDocument((event) => {
+    //     if (activeEditor && event.document === activeEditor.document) {
+    //       updateDecorationsMiscellaneous();
+    //     }
+    //   })
+    // );
 }
 exports.activate = activate;
 //# sourceMappingURL=extension.js.map

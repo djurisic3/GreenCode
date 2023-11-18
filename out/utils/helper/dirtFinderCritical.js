@@ -9,7 +9,7 @@ let globalCriticalOccurrenceCounter = 0;
 function findSelectAsteriskStatements(document) {
     let decorations = [];
     let text = document.getText();
-    if (document.languageId !== "sql") {
+    if (document.languageId.includes("sql") === false) {
         return [];
     }
     // Cartesian logic
@@ -36,6 +36,8 @@ function findSelectAsteriskStatements(document) {
         if (!ast || ast === undefined) {
             return;
         }
+        counter.resetCounterCritical(); // reseting counter and locations of high severity code spots
+        (0, codeLocationStorage_1.clearLocations)();
         if (isCartesianProduct(ast) || isUnusedJoin(ast) || isCrossJoin(ast)) {
             let start = document.positionAt(text.indexOf(query));
             let end = document.positionAt(text.indexOf(query) + query.length);
