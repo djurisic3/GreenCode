@@ -5,10 +5,10 @@ const vscode = require("vscode");
 const node_sql_parser_1 = require("node-sql-parser");
 const counter = require("./counter");
 const codeLocationStorage_1 = require("../plsql/codeLocationStorage");
-let globalCriticalOccurrenceCounter = 0;
 function findSelectAsteriskStatements(document) {
     let decorations = [];
     let text = document.getText();
+    (0, codeLocationStorage_1.clearLocations)("high");
     if (document.languageId.includes("sql") === false) {
         return [];
     }
@@ -37,7 +37,6 @@ function findSelectAsteriskStatements(document) {
             return;
         }
         counter.resetCounterCritical(); // reseting counter and locations of high severity code spots
-        (0, codeLocationStorage_1.clearLocations)();
         if (isCartesianProduct(ast) || isUnusedJoin(ast) || isCrossJoin(ast)) {
             let start = document.positionAt(text.indexOf(query));
             let end = document.positionAt(text.indexOf(query) + query.length);

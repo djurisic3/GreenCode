@@ -69,7 +69,7 @@ function navigateToNextSeverity(severity: "high" | "medium"): void {
       statusBarMessageMedium.show();
     } else if (severity === "high") {
       statusBarMessageMedium.text = `High Severity: 0 spots need eco-efficient optimization.`;
-      statusBarMessageMedium.show();
+      //statusBarMessageMedium.show();
     }
     vscode.window.showInformationMessage(
       `No more ${severity} severity spots to navigate to.`

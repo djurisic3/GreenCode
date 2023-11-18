@@ -7,15 +7,17 @@ function addLocation(range, severity) {
 }
 exports.addLocation = addLocation;
 function getLocations(severity) {
-    return locations.filter(loc => loc.severity === severity).map(loc => loc.range);
+    return locations
+        .filter((loc) => loc.severity === severity)
+        .map((loc) => loc.range);
 }
 exports.getLocations = getLocations;
-function clearLocations() {
-    locations = [];
+function clearLocations(severity) {
+    locations = locations.filter((loc) => loc.severity !== severity);
 }
 exports.clearLocations = clearLocations;
 function removeLocation(range, severity) {
-    locations = locations.filter(loc => loc.severity !== severity || !loc.range.isEqual(range));
+    locations = locations.filter((loc) => loc.severity !== severity || !loc.range.isEqual(range));
 }
 exports.removeLocation = removeLocation;
 //# sourceMappingURL=codeLocationStorage.js.map

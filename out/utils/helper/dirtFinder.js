@@ -10,8 +10,8 @@ async function markSelectSQL(document, isLogged, loginData) {
     if (document.languageId.includes("sql") === false) {
         return [];
     }
+    (0, codeLocationStorage_1.clearLocations)("medium");
     counter.resetCounter(); // reseting counter and locations of medium severity code spots
-    (0, codeLocationStorage_1.clearLocations)();
     let text = document.getText();
     let decorations = [];
     let matchImplicitJoin;

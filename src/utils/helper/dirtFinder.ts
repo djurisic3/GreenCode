@@ -14,9 +14,9 @@ export async function markSelectSQL(
   if (document.languageId.includes("sql") === false) {
     return [];
   }
-
+  clearLocations("medium");
   counter.resetCounter(); // reseting counter and locations of medium severity code spots
-  clearLocations();
+  
 
   let text = document.getText();
 
