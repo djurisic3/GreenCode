@@ -4,7 +4,7 @@
   "description": "Elevate your coding efficiency with GreenCode – smartly optimizing for reduced energy consumption.",
   "publisher": "GreenCode",
   "icon": "images/greencode_vscode_logo.png",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.74.0"
   },

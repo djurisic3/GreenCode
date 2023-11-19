@@ -11,6 +11,30 @@ GreenCode is a powerful Visual Studio Code extension that enhances your coding e
 - **One-Time Information Messages**: Displays the number of high and medium severity issues upon activation, and also upon deactivation and reactivation.
 - **SQL File Support**: When working with SQL files, prompts for login data for database-specific analysis.
 
+### Version 0.1.0 - New Features
+
+#### Interactive Severity Navigation
+
+GreenCode now offers an enhanced interactive experience with its severity navigation feature. This feature significantly improves the way developers interact with the identified issues in their code.
+
+##### Status Bar Integration
+
+- The extension displays the count of high and medium severity issues separately in the status bar.
+- Each count is interactive and clickable, allowing developers to swiftly navigate through the issues of the respective severity.
+
+##### Looped Navigation
+
+- Once you reach the end of the list of issues in a specific severity, the navigation loops back to the first issue.
+- This ensures a continuous and seamless review cycle, enabling developers to address all issues without manual resetting.
+
+##### Dynamic Issue Count
+
+- As you navigate through and address these issues, GreenCode dynamically updates the count of high and medium severity spots.
+- This provides real-time feedback on your progress towards optimizing your code, making the process more efficient and effective.
+
+These enhancements are designed to streamline the optimization process, making it more efficient and user-friendly. By focusing on high-impact changes first and then addressing medium severity issues, developers can systematically improve their code’s performance and contribute to more sustainable software development practices.
+
+
 ## Extension Commands
 
 GreenCode introduces several commands with convenient keybindings:
