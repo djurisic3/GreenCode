@@ -16,7 +16,7 @@ async function sqlImplicitJoinHoverReplacement(currentSqlHover) {
         return;
     let matchImplicitJoin;
     let matchWhere;
-    const implicitJoinRegex = /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
+    const implicitJoinRegex = /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*(\([^)]*\)|[\s\S]+?))(?:\s*(AND|OR)\s+(\w+(\.\w+)?\s*=\s*(\([^)]*\)|[\s\S]+?)))*))?(?:\s*;)?[^\S\r\n]*$/gim;
     // We utilize the hover range provided by currentSqlHover for our hover functionality
     const hoverRange = currentSqlHover.currentImplicitSqlRange;
     if (!hoverRange) {
@@ -79,9 +79,7 @@ async function sqlImplicitJoinCursorReplacement(currentSqlHover) {
         return;
     let matchImplicitJoin;
     let matchWhere;
-    const implicitJoinRegex = 
-    ///\bSELECT\b[ \t]+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b[ \t]+((\w+(\.\w+)?)([ \t]+(AS[ \t]+)?\w+)?([ \t]*,[ \t]*(\w+(\.\w+)?)([ \t]+(AS[ \t]+)?\w+)?)*)([ \t]+(WHERE[ \t]+((\w+(\.\w+)?[ \t]*=[ \t]*\w+(\.\w+)?)([ \t]+(AND|OR)[ \t]+(\w+(\.\w+)?[ \t]*=[ \t]*\w+(\.\w+)?))*))?)([ \t]*;)?[ \t]*$/gim;
-    /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)(\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*))?)(\s*;)?\s*$/gim;
+    const implicitJoinRegex = /\bSELECT\b\s+((?:(?!SELECT|UPDATE|DELETE|INSERT)[\s\S])*?)\bFROM\b\s+((\w+(\.\w+)?)(\s+(AS\s+)?\w+)?(\s*,\s*(\w+(\.\w+)?)(\s+(AS\s+)?\w+)?)*)\s+(WHERE\s+((\w+(\.\w+)?\s*=\s*(\([^)]*\)|[\s\S]+?))(?:\s*(AND|OR)\s+(\w+(\.\w+)?\s*=\s*(\([^)]*\)|[\s\S]+?)))*))?(?:\s*;)?[^\S\r\n]*$/gim;
     const position = editor.selection.active;
     let implicitJoinCursorAndRange = cursor.isCursorOnImpJoin(position);
     if (!implicitJoinCursorAndRange) {
@@ -102,7 +100,7 @@ async function sqlImplicitJoinCursorReplacement(currentSqlHover) {
             }
             const [tableInfo, isPrimaryKeyAbsent, isValidSql, primaryKeyMap, tableAliasMap,] = (await (0, primaryKeyHelper_1.checkImplicitPrimKeys)(loginData, matchImplicitJoin, matchWhere));
             if (isValidSql) {
-                replacedCode = implicitJoinCursor.replace(/\bWHERE\s+((\w+(\.\w+)?\s*=\s*\w+(\.\w+)?)(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*\w+(\.\w+)?))*)/gim, (match) => {
+                replacedCode = implicitJoinCursor.replace(/\bWHERE\s+(\w+(\.\w+)?\s*=\s*('[^']*'|"[^"]*"|[\w.]+(\('[^']+'\)|\("[^"]+"\)|\(\d+\))?|[^ \nANDOR]+))(\s+(AND|OR)\s+(\w+(\.\w+)?\s*=\s*('[^']*'|"[^"]*"|[\w.]+(\('[^']+'\)|\("[^"]+"\)|\(\d+\))?|[^ \nANDOR]+)))*/gim, (match) => {
                     let newConditions = [];
                     for (const tableName in primaryKeyMap) {
                         const primaryKeys = primaryKeyMap[tableName];
@@ -118,6 +116,17 @@ async function sqlImplicitJoinCursorReplacement(currentSqlHover) {
                         .replace(/^\s*WHERE\s+/gim, "")
                         .split(/\s+(?:AND|OR)\s+/);
                     const newConditionsSet = new Set(newConditions);
+                    let endChar = "";
+                    if (match.endsWith(";")) {
+                        // Remove the last character (semicolon) and store it
+                        endChar = ";";
+                        match = match.slice(0, -1);
+                    }
+                    else if (match.endsWith(")")) {
+                        // Remove the last character (closing bracket) and store it
+                        endChar = ")";
+                        match = match.slice(0, -1);
+                    }
                     if (newConditions.length > 0 &&
                         !currentConditions.every((cond) => newConditionsSet.has(cond))) {
                         return `${match} AND ${newConditions.join(" AND ")}`;
