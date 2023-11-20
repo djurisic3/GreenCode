@@ -384,14 +384,13 @@ async function activate(context) {
             initialSqlDecorationSetup();
         }
     }), vscode.workspace.onDidChangeTextDocument((event) => {
-        if (activeEditor && event.document === activeEditor.document) {
+        if (activeEditor && event.document === activeEditor.document && isUpdateDecorationsSqlRun) {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 initialSqlDecorationSetup();
             }, 650);
             counter.resetCounter();
             counter.resetCounterCritical();
-            initialSqlDecorationSetup();
         }
     }));
     // context.subscriptions.push(
