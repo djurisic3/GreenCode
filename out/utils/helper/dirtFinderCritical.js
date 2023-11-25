@@ -14,22 +14,66 @@ function findSelectAsteriskStatements(document) {
     }
     // Cartesian logic
     const parser = new node_sql_parser_1.Parser();
-    let queries = text.split(/;|\)/); // split text by ';' to get individual queries
+    // SELECT * logic
+    const sqlStarStatements = /\bselect\s+(?:\w+\.)?\*\s+(from|into)\b/gim;
+    let matchSqlStar;
+    while ((matchSqlStar = sqlStarStatements.exec(text)) !== null) {
+        counter.incrementCounterCritical();
+        const start = document.positionAt(matchSqlStar.index);
+        const end = document.positionAt(sqlStarStatements.lastIndex);
+        const savedRange = new vscode.Range(start, end);
+        (0, codeLocationStorage_1.addLocation)(savedRange, "high");
+        decorations.push({
+            range: new vscode.Range(start, end),
+            hoverMessage: `Use column names instead of the "*" wildcard character.   \nYou can save up to 40% in energy per statement call when using only relevant columns.`,
+        });
+    }
+    let queries = text.split(/;(?![^(]*\))|(?<=\))/gm); // split text by ';' to get individual queries
+    const forLoopRegex = /FOR\s+\w+\s+IN\s+\(([^)]+)\)\s+LOOP[\s\S]+?END\s+LOOP;/gim;
+    let forLoopMatches = text.matchAll(forLoopRegex);
+    // Process FOR loop queries
+    for (const match of forLoopMatches) {
+        let innerQuery = match[1]; // The capturing group with the query
+        if (innerQuery) {
+            try {
+                let ast = parser.astify(innerQuery);
+                processAstNode(ast, innerQuery, decorations, document);
+            }
+            catch (error) {
+                // Handle parse error or skip
+            }
+        }
+    }
     for (let query of queries) {
         let ast;
         try {
-            ast = parser.astify(query); // parse the query to get AST
+            ast = parser.astify(query);
         }
         catch (error) {
-            // handle any parsing errors
-            //console.error("Error parsing query: ", error);
             continue;
         }
+        processAstNode(ast, query, decorations, document);
+    }
+    return decorations;
+    function processAstNode(ast, query, decorations, document) {
         if (Array.isArray(ast)) {
-            ast.forEach((node) => checkForCartesianProduct(node, query, decorations, document));
+            ast.forEach((node) => processAstNode(node, query, decorations, document));
         }
-        else {
+        else if (ast && ast.type === "select") {
             checkForCartesianProduct(ast, query, decorations, document);
+            processNestedSelects(ast, query, decorations, document);
+        }
+    }
+    function processNestedSelects(ast, query, decorations, document) {
+        // Process nested queries in the FROM clause
+        if (ast.from) {
+            ast.from.forEach((fromItem) => {
+                if (fromItem.expr &&
+                    fromItem.expr.ast &&
+                    fromItem.expr.ast.type === "select") {
+                    processAstNode(fromItem.expr.ast, query, decorations, document);
+                }
+            });
         }
     }
     function checkForCartesianProduct(ast, query, decorations, document) {
@@ -72,8 +116,27 @@ function findSelectAsteriskStatements(document) {
         if (!ast || ast.type !== "select" || !ast.from || ast.from.length <= 1) {
             return false;
         }
+        const hasSubquery = ast.from.some((fromItem) => fromItem.expr &&
+            fromItem.expr.ast &&
+            fromItem.expr.ast.type === "select");
+        if (hasSubquery) {
+            // Here, you can add logic to check whether these subqueries are joined correctly
+            // For now, we will return true if there's at least one subquery in the FROM clause
+            return true;
+        }
         const fromTables = [];
         const joinConditions = [];
+        if (ast.from.length > 1) {
+            // If there are multiple tables in the FROM clause without explicit JOINs,
+            // it's likely an implicit Cartesian product
+            const whereConditions = ast.where
+                ? extractWhereConditions(ast.where)
+                : [];
+            const fromTables = ast.from.map((fromNode) => fromNode.table);
+            // Check if all tables in FROM are covered in WHERE conditions
+            const allTablesUsedInWhere = fromTables.every((table) => whereConditions.some((condition) => condition.includes(table)));
+            return !allTablesUsedInWhere; // If not all tables are used in WHERE, it's a Cartesian product
+        }
         function recurseThroughJoinAndFromNodes(node) {
             if (!node) {
                 return;
@@ -164,20 +227,6 @@ function findSelectAsteriskStatements(document) {
         return conditions;
     }
     //
-    // SELECT * logic
-    const sqlStarStatements = /\bselect\s+(?:\w+\.)?\*\s+(from|into)\b/gim;
-    let matchSqlStar;
-    while ((matchSqlStar = sqlStarStatements.exec(text)) !== null) {
-        counter.incrementCounterCritical();
-        const start = document.positionAt(matchSqlStar.index);
-        const end = document.positionAt(sqlStarStatements.lastIndex);
-        const savedRange = new vscode.Range(start, end);
-        (0, codeLocationStorage_1.addLocation)(savedRange, "high");
-        decorations.push({
-            range: new vscode.Range(start, end),
-            hoverMessage: `Use column names instead of the "*" wildcard character.   \nYou can save up to 40% in energy per statement call when using only relevant columns.`,
-        });
-    }
     return decorations;
 }
 exports.findSelectAsteriskStatements = findSelectAsteriskStatements;
