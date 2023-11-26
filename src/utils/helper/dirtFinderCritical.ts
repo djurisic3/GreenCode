@@ -138,13 +138,14 @@ export function findSelectAsteriskStatements(
       return;
     }
 
-    counter.resetCounterCritical(); // reseting counter and locations of high severity code spots
+    //counter.resetCounterCritical(); // reseting counter and locations of high severity code spots
 
     if (isCartesianProduct(ast) || isUnusedJoin(ast) || isCrossJoin(ast)) {
       let start = document.positionAt(text.indexOf(query));
       let end = document.positionAt(text.indexOf(query) + query.length);
       const savedRange = new vscode.Range(start, end);
       addLocation(savedRange, "high");
+      counter.incrementCounterCritical();
       decorations.push({
         range: new vscode.Range(start, end),
         hoverMessage:
@@ -286,7 +287,7 @@ export function findSelectAsteriskStatements(
       );
 
       if (!allTablesUsed) {
-        counter.incrementCounterCritical();
+        
       }
       // A Cartesian product is present if not all tables are used in the conditions
       return !allTablesUsed;

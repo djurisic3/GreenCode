@@ -40,13 +40,13 @@ function updateStatusBarMessages() {
   const highCount = counter.getCounterCritical();
   const mediumCount = counter.getCounter();
 
-  if (highCount > 0) {
+  if (highCount >= 0) {
     statusBarMessageHigh.text = `High Severity: ${highCount} spots need eco-efficient optimization.`;
     statusBarMessageHigh.command = "greencode.navigateToNextHighSeverity";
     statusBarMessageHigh.show();
   }
 
-  if (mediumCount > 0) {
+  if (mediumCount >= 0) {
     statusBarMessageMedium.text = `Medium Severity: ${mediumCount} spots need eco-efficient optimization.`;
     statusBarMessageMedium.command = "greencode.navigateToNextMediumSeverity";
     statusBarMessageMedium.show();
@@ -553,6 +553,10 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       activeEditor = editor;
       if (editor) {
+        deactivateDecorationsSql();
+        deactivateDecorationsSqlCritical();
+        counter.resetCounter();
+        counter.resetCounterCritical();
         initialSqlDecorationSetup();
       }
     }),

@@ -80,12 +80,13 @@ function findSelectAsteriskStatements(document) {
         if (!ast || ast === undefined) {
             return;
         }
-        counter.resetCounterCritical(); // reseting counter and locations of high severity code spots
+        //counter.resetCounterCritical(); // reseting counter and locations of high severity code spots
         if (isCartesianProduct(ast) || isUnusedJoin(ast) || isCrossJoin(ast)) {
             let start = document.positionAt(text.indexOf(query));
             let end = document.positionAt(text.indexOf(query) + query.length);
             const savedRange = new vscode.Range(start, end);
             (0, codeLocationStorage_1.addLocation)(savedRange, "high");
+            counter.incrementCounterCritical();
             decorations.push({
                 range: new vscode.Range(start, end),
                 hoverMessage: "Cartesian product or unused join detected. Please review the query for potential issues.",
@@ -191,7 +192,6 @@ function findSelectAsteriskStatements(document) {
             const allTablesUsed = fromTables.every((table) => usedTables.has(table.name) ||
                 (table.alias && usedTables.has(table.alias)));
             if (!allTablesUsed) {
-                counter.incrementCounterCritical();
             }
             // A Cartesian product is present if not all tables are used in the conditions
             return !allTablesUsed;
