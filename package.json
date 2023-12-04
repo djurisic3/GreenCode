@@ -4,7 +4,7 @@
   "description": "Elevate your coding efficiency with GreenCode – smartly optimizing for reduced energy consumption.",
   "publisher": "GreenCode",
   "icon": "images/greencode_vscode_logo.png",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -27,10 +27,9 @@
     "MySQL"
   ],
   "activationEvents": [
-    "onCommand:greencode.markDirtyCode",
+    "onCommand:markDirtyCode",
     "onCommand:deactivateMarkDirtyCode"
   ],
-  
   "repository": {
     "type": "git",
     "url": "https://github.com/djurisic3/GreenCode.git"
@@ -52,9 +51,17 @@
       },
       {
         "command": "greencode.promptLoginData"
+      },
+      {
+        "command": "greencode.analyzeSql",
+        "key": "ctrl+alt+i"
       }
     ],
     "commands": [
+      {
+        "command": "greencode.analyzeSql",
+        "title": "GreenCode: Use AI to analyze code"
+      },
       {
         "command": "greencode.findSqlQueries",
         "title": "GreenCode: Analyze database for optimization suggestions"
@@ -75,7 +82,7 @@
   },
   "bugs": {
     "url": "https://github.com/djurisic3/GreenCode/issues"
-},
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -89,7 +96,7 @@
     "@types/mocha": "^10.0.1",
     "@types/mssql": "^8.1.2",
     "@types/mysql": "^2.15.21",
-    "@types/node": "^16.18.12",
+    "@types/node": "^16.18.65",
     "@types/oracledb": "^5.2.5",
     "@types/vscode": "^1.74.0",
     "@typescript-eslint/eslint-plugin": "^5.45.0",

@@ -24,6 +24,7 @@ import {
   getLocations,
   removeLocation,
 } from "./utils/plsql/codeLocationStorage";
+import { Configuration, OpenAIApi } from "openai";
 
 let decorationTypeForLoop: vscode.TextEditorDecorationType;
 let decorationTypeCsv: vscode.TextEditorDecorationType;
@@ -127,7 +128,6 @@ function updateDecorationsMiscellaneous() {
 }
 
 async function updateDecorationsSql() {
-  
   activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor) {
     return;
@@ -214,6 +214,66 @@ export async function activate(context: vscode.ExtensionContext) {
   let sqlExplicitHoverProvider = new sqlExplicitJoinHover();
   let plsqlExplicitHoverProvider = new plsqlExplicitJoinHover();
   let plsqlImplicitHoverProvider = new plsqlImplicitJoinHover();
+
+  let disposableAI = vscode.commands.registerCommand(
+    "greencode.analyzeSql",
+    async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        vscode.window.showInformationMessage("No editor is active");
+        return;
+      }
+
+      const text = editor.document.getText(editor.selection);
+      if (!text) {
+        vscode.window.showInformationMessage("No text is selected");
+        return;
+      }
+
+      const queries = splitSqlQueries(text);
+      // Limit the processing to the first 3 queries
+      const maxQueriesToProcess = 3;
+      for (let i = 0; i < Math.min(queries.length, maxQueriesToProcess); i++) {
+        const query = queries[i];
+        const optimizationSuggestions = await getOptimizationSuggestions(query);
+        vscode.window.showInformationMessage(optimizationSuggestions);
+      }
+    }
+  );
+
+  function splitSqlQueries(text: string): string[] {
+    // Basic splitting logic, can be enhanced for more complex SQL scripts
+    return text
+      .split(";")
+      .map((query) => query.trim())
+      .filter((query) => query.length > 0);
+  }
+
+  async function getOptimizationSuggestions(sqlQuery: string): Promise<string> {
+    // Initialize OpenAI API
+    const openAIConfiguration = new Configuration({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+    const openai = new OpenAIApi(openAIConfiguration);
+
+    try {
+      const prompt = `Given the SQL query: \n\n${sqlQuery}\n\nProvide optimization suggestions as code, focusing on green coding practices, without repeating the original query:`;
+      const response = await openai.createCompletion({
+        model: "text-davinci-003", // Update as per the available models
+        prompt: prompt,
+        max_tokens: 150,
+      });
+
+      return (
+        response.data.choices[0]?.text!.trim() || "No suggestions available."
+      );
+    } catch (error) {
+      console.error("Error while fetching suggestions from OpenAI:", error);
+      return "An error occurred while fetching suggestions.";
+    }
+  }
+
+  context.subscriptions.push(disposableAI);
 
   statusBarMessageHigh = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
@@ -561,11 +621,15 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     }),
     vscode.workspace.onDidChangeTextDocument((event) => {
-      if (activeEditor && event.document === activeEditor.document && isUpdateDecorationsSqlRun) {
+      if (
+        activeEditor &&
+        event.document === activeEditor.document &&
+        isUpdateDecorationsSqlRun
+      ) {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
           initialSqlDecorationSetup();
-        }, 650)
+        }, 650);
         counter.resetCounter();
         counter.resetCounterCritical();
       }
