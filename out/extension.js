@@ -167,7 +167,7 @@ async function activate(context) {
     let sqlExplicitHoverProvider = new hoverProvider_1.sqlExplicitJoinHover();
     let plsqlExplicitHoverProvider = new hoverProvider_2.sqlExplicitJoinHover();
     let plsqlImplicitHoverProvider = new hoverProvider_2.sqlImplicitJoinHover();
-    let disposableAI = vscode.commands.registerCommand("greencode.analyzeSql", async () => {
+    let disposableAI = vscode.commands.registerCommand("greencode.activateAI", async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             vscode.window.showInformationMessage("No editor is active");

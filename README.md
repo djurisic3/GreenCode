@@ -111,7 +111,8 @@ GreenCode introduces several commands with convenient keybindings:
 
 - `greencode.markDirtyCode`: Activates the extension. Keybinding: `Shift + Ctrl + Alt + F`
 - `greencode.deactivateMarkDirtyCode`: Deactivates the extension. Keybinding: `Shift + Ctrl + Alt + D`
-- `greencode.cleanMarkedCode`: Replaces identified issues with optimized code. Keybinding: `Ctrl + Space`
+- `greencode.cleanMarkedCode`: Replaces identified issues with optimized code. Keybinding (works currently only for medium severity spots): `Ctrl + Space`
+- `greencode.activateAI`: Activates the AI analysis on marked code. Keybinding: Ctrl + Alt + I (only active when code is marked for analysis)
 
 ## Getting Started
 

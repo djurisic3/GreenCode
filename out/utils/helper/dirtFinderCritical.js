@@ -120,24 +120,26 @@ function findSelectAsteriskStatements(document) {
         const hasSubquery = ast.from.some((fromItem) => fromItem.expr &&
             fromItem.expr.ast &&
             fromItem.expr.ast.type === "select");
-        if (hasSubquery) {
-            // Here, you can add logic to check whether these subqueries are joined correctly
-            // For now, we will return true if there's at least one subquery in the FROM clause
-            return true;
-        }
+        // if (hasSubquery) {
+        //   // Here, you can add logic to check whether these subqueries are joined correctly
+        //   // For now, we will return true if there's at least one subquery in the FROM clause
+        //   return true;
+        // }
         const fromTables = [];
         const joinConditions = [];
-        if (ast.from.length > 1) {
-            // If there are multiple tables in the FROM clause without explicit JOINs,
-            // it's likely an implicit Cartesian product
-            const whereConditions = ast.where
-                ? extractWhereConditions(ast.where)
-                : [];
-            const fromTables = ast.from.map((fromNode) => fromNode.table);
-            // Check if all tables in FROM are covered in WHERE conditions
-            const allTablesUsedInWhere = fromTables.every((table) => whereConditions.some((condition) => condition.includes(table)));
-            return !allTablesUsedInWhere; // If not all tables are used in WHERE, it's a Cartesian product
-        }
+        // if (ast.from.length > 1) {
+        //   // If there are multiple tables in the FROM clause without explicit JOINs,
+        //   // it's likely an implicit Cartesian product
+        //   const whereConditions = ast.where
+        //     ? extractWhereConditions(ast.where)
+        //     : [];
+        //   const fromTables = ast.from.map((fromNode: any) => fromNode.table);
+        //   // Check if all tables in FROM are covered in WHERE conditions
+        //   const allTablesUsedInWhere = fromTables.every((table: string) =>
+        //     whereConditions.some((condition) => condition.includes(table))
+        //   );
+        //   return !allTablesUsedInWhere; // If not all tables are used in WHERE, it's a Cartesian product
+        // }
         function recurseThroughJoinAndFromNodes(node) {
             if (!node) {
                 return;
@@ -186,6 +188,7 @@ function findSelectAsteriskStatements(document) {
                     usedTables.add(condition.table);
                 }
             }
+            conditions.forEach(extractTableNames);
             joinConditions.forEach(extractTableNames);
             // If not all tables are used in ON conditions, it's a Cartesian product
             // Compare the elements of usedTables with fromTables
@@ -215,14 +218,19 @@ function findSelectAsteriskStatements(document) {
     }
     function extractWhereConditions(whereObj) {
         let conditions = [];
-        if (whereObj.condition) {
-            conditions.push(whereObj.condition);
-        }
-        if (whereObj.left) {
+        // Recursively process the left part of the whereObj
+        if (whereObj && whereObj.left) {
             conditions = conditions.concat(extractWhereConditions(whereObj.left));
         }
-        if (whereObj.right) {
+        // Recursively process the right part of the whereObj
+        if (whereObj && whereObj.right) {
             conditions = conditions.concat(extractWhereConditions(whereObj.right));
+        }
+        // If whereObj itself is a condition (e.g., a binary expression), handle it
+        if (whereObj && whereObj.type === "binary_expr") {
+            // Construct a condition string from the binary expression
+            //let conditionStr = `${whereObj.left.table}.${whereObj.left.column} ${whereObj.operator} ${whereObj.right.table}.${whereObj.right.column}`;
+            conditions.push(whereObj);
         }
         return conditions;
     }

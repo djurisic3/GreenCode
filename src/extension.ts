@@ -216,7 +216,7 @@ export async function activate(context: vscode.ExtensionContext) {
   let plsqlImplicitHoverProvider = new plsqlImplicitJoinHover();
 
   let disposableAI = vscode.commands.registerCommand(
-    "greencode.analyzeSql",
+    "greencode.activateAI",
     async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
