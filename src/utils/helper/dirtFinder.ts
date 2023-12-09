@@ -16,7 +16,6 @@ export async function markSelectSQL(
   }
   clearLocations("medium");
   counter.resetCounter(); // reseting counter and locations of medium severity code spots
-  
 
   let text = document.getText();
 
@@ -80,6 +79,7 @@ export async function markSelectSQL(
         });
       }
     } else if (isPlsqlLoginData(loginData)) {
+      let foundPrimaryKeys = false;
       const [tablePrimKeys, isPrimaryKeyAbsentExplicit, isValidExplicitSql] =
         await primKeysPlSqlHelper.checkImplicitPrimKeys(
           loginData,
@@ -89,6 +89,8 @@ export async function markSelectSQL(
       if (isValidExplicitSql && isPrimaryKeyAbsentExplicit) {
         const start = document.positionAt(matchImplicitJoin.index);
         const end = document.positionAt(implicitJoinRegex.lastIndex);
+
+        foundPrimaryKeys = true;
         counter.incrementCounter();
 
         const savedRange = new vscode.Range(start, end);
@@ -241,5 +243,6 @@ export async function markSelectSQL(
       }
     }
   }
+
   return decorations;
 }

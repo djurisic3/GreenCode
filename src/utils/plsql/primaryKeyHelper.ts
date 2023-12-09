@@ -1,7 +1,6 @@
 import { findPrimaryKeys, openConnection } from "./tableIndexesHelper";
 import * as queryHelper from "../plsql/tableIndexesHelper";
 
-
 export async function checkImplicitPrimKeys(
   credentials: {
     user: string;
@@ -52,14 +51,14 @@ export async function checkImplicitPrimKeys(
     }
     return actualTableName;
   });
-  const primaryKeyMap = await queryHelper.findPrimaryKeys(
-    processedTableNames
-  );
+  const primaryKeyMap = await queryHelper.findPrimaryKeys(processedTableNames);
 
   // Create a string of table names and their corresponding primary keys
   const tableInfo = processedTableNames
     .map((tableName) => {
-      const primaryKeys = primaryKeyMap[tableName.toLocaleUpperCase()] ?? ["unknown"];
+      const primaryKeys = primaryKeyMap[tableName.toLocaleUpperCase()] ?? [
+        "unknown",
+      ];
       return `${tableName}: ${primaryKeys.join(", ")}`;
     })
     .join("   \n");
@@ -100,7 +99,7 @@ export async function checkExplicitPrimKeys(
 ) {
   let isValidSql: boolean;
   let isPrimaryKeyAbsent: boolean = false;
-  let allTablesOrAliases: Map<string,string> = new Map();
+  let allTablesOrAliases: Map<string, string> = new Map();
   const joinPattern = /(?:FROM|JOIN)\s+([\w]+)(?:\s+AS)?(?:\s+([a-zA-Z]+))?/gim;
 
   const matchTablesFromJoinOn = Array.from(
@@ -145,19 +144,22 @@ export async function checkExplicitPrimKeys(
     return actualTableName;
   });
 
-
-
-  await openConnection(credentials.user, credentials.password, credentials.connectionString);
+  await openConnection(
+    credentials.user,
+    credentials.password,
+    credentials.connectionString
+  );
   const primaryKeyMap = await findPrimaryKeys(processedTableNames);
 
   // Create a string of table names and their corresponding primary keys
   const tableInfo = processedTableNames
     .map((tableName) => {
-      const primaryKeys = primaryKeyMap[tableName.toLocaleUpperCase()] ?? ["unknown"];
+      const primaryKeys = primaryKeyMap[tableName.toLocaleUpperCase()] ?? [
+        "unknown",
+      ];
       return `${tableName}: ${primaryKeys.join(", ")}`;
     })
     .join("   \n");
-
 
   for (const tableName in primaryKeyMap) {
     const primaryKeys = primaryKeyMap[tableName] ?? ["unknown"];
@@ -166,7 +168,10 @@ export async function checkExplicitPrimKeys(
 
     primaryKeys.forEach((primaryKey) => {
       const table = allTablesOrAliases.get(tableName.toLocaleLowerCase());
-      const primaryKeyRegex = new RegExp(`\\b${table}\\.${primaryKey}\\b`, "gmi");
+      const primaryKeyRegex = new RegExp(
+        `\\b${table}\\.${primaryKey}\\b`,
+        "gmi"
+      );
       if (!primaryKeyRegex.test(matchJoinOn)) {
         allPrimaryKeysPresent = false;
       }

@@ -139,20 +139,33 @@ async function updateDecorationsSql() {
 
   activeEditor.setDecorations(decorationTypeSqlCritical, selectStarDecoration);
 
-  let isLogged = false;
-  let decorations = await sqlFinder.markSelectSQL(
-    activeEditor.document,
-    isLogged,
-    loginData!
-  );
+  // Start the loading bar
+  await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: "Fetching and checking primary keys from the database...",
+      cancellable: false,
+    },
+    async (progress) => {
+      progress.report({ increment: -1 });
+      let isLogged = false;
+      let decorations = await sqlFinder.markSelectSQL(
+        activeEditor!.document,
+        isLogged,
+        loginData!
+      );
 
-  if (!isUpdateDecorationsSqlRun) {
-    updateStatusBarMessages();
-  }
-  if (selectStarDecoration || decorations) {
-    isUpdateDecorationsSqlRun = true;
-  }
-  activeEditor.setDecorations(decorationTypeSql, decorations);
+      if (!isUpdateDecorationsSqlRun) {
+        updateStatusBarMessages();
+      }
+      if (selectStarDecoration || decorations) {
+        isUpdateDecorationsSqlRun = true;
+      }
+      activeEditor!.setDecorations(decorationTypeSql, decorations);
+      progress.report({ increment: 100 });
+      await new Promise((resolve) => setTimeout(resolve, 800)); // Optional delay to ensure the user sees the completion
+    }
+  );
 }
 
 function deactivateDecorationsForLoop() {
