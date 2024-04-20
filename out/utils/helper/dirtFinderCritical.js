@@ -127,19 +127,6 @@ function findSelectAsteriskStatements(document) {
         // }
         const fromTables = [];
         const joinConditions = [];
-        // if (ast.from.length > 1) {
-        //   // If there are multiple tables in the FROM clause without explicit JOINs,
-        //   // it's likely an implicit Cartesian product
-        //   const whereConditions = ast.where
-        //     ? extractWhereConditions(ast.where)
-        //     : [];
-        //   const fromTables = ast.from.map((fromNode: any) => fromNode.table);
-        //   // Check if all tables in FROM are covered in WHERE conditions
-        //   const allTablesUsedInWhere = fromTables.every((table: string) =>
-        //     whereConditions.some((condition) => condition.includes(table))
-        //   );
-        //   return !allTablesUsedInWhere; // If not all tables are used in WHERE, it's a Cartesian product
-        // }
         function recurseThroughJoinAndFromNodes(node) {
             if (!node) {
                 return;
@@ -229,7 +216,6 @@ function findSelectAsteriskStatements(document) {
         // If whereObj itself is a condition (e.g., a binary expression), handle it
         if (whereObj && whereObj.type === "binary_expr") {
             // Construct a condition string from the binary expression
-            //let conditionStr = `${whereObj.left.table}.${whereObj.left.column} ${whereObj.operator} ${whereObj.right.table}.${whereObj.right.column}`;
             conditions.push(whereObj);
         }
         return conditions;

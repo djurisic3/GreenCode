@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import * as primKeysHelper from "../mysql/primaryKeyHelper";
+// import * as primKeysHelper from "../mysql/primaryKeyHelper";
 import * as primKeysPlSqlHelper from "../plsql/primaryKeyHelper";
 import * as counter from "./counter";
 import { addLocation, clearLocations } from "../plsql/codeLocationStorage";
@@ -59,7 +59,7 @@ export async function markSelectSQL(
       );
     }
 
-    if (isMysqlLoginData(loginData)) {
+    /*if (isMysqlLoginData(loginData)) {
       const [tablePrimKeys, isPrimaryKeyAbsent, isValidSql] =
         await primKeysHelper.checkImplicitPrimKeys(
           loginData,
@@ -78,7 +78,7 @@ export async function markSelectSQL(
           hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
         });
       }
-    } else if (isPlsqlLoginData(loginData)) {
+    }  else*/ if (isPlsqlLoginData(loginData)) {
       let foundPrimaryKeys = false;
       const [tablePrimKeys, isPrimaryKeyAbsentExplicit, isValidExplicitSql] =
         await primKeysPlSqlHelper.checkImplicitPrimKeys(
@@ -144,25 +144,25 @@ export async function markSelectSQL(
       );
     }
 
-    if (isMysqlLoginData(loginData)) {
-      const [tablePrimKeys, isPrimaryKeyAbsent, isValidSql] =
-        await primKeysHelper.checkImplicitPrimKeys(
-          loginData,
-          matchSqlStatements,
-          matchWhere
-        );
+    // if (isMysqlLoginData(loginData)) {
+    //   const [tablePrimKeys, isPrimaryKeyAbsent, isValidSql] =
+    //     await primKeysHelper.checkImplicitPrimKeys(
+    //       loginData,
+    //       matchSqlStatements,
+    //       matchWhere
+    //     );
 
-      counter.incrementCounter();
-      const start = document.positionAt(matchSqlStatements.index);
-      const end = document.positionAt(sqlStatements.lastIndex);
+    //   counter.incrementCounter();
+    //   const start = document.positionAt(matchSqlStatements.index);
+    //   const end = document.positionAt(sqlStatements.lastIndex);
 
-      const savedRange = new vscode.Range(start, end);
-      addLocation(savedRange, "medium");
-      decorations.push({
-        range: new vscode.Range(start, end),
-        hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
-      });
-    }
+    //   const savedRange = new vscode.Range(start, end);
+    //   addLocation(savedRange, "medium");
+    //   decorations.push({
+    //     range: new vscode.Range(start, end),
+    //     hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
+    //   });
+    // }
   }
 
   let matchExplicitJoin;
@@ -203,7 +203,7 @@ export async function markSelectSQL(
       );
     }
 
-    if (isMysqlLoginData(loginData)) {
+    /*if (isMysqlLoginData(loginData)) {
       const [tablePrimKeys, isPrimaryKeyAbsentExplicit, isValidExplicitSql] =
         await primKeysHelper.checkExplicitPrimKeys(
           loginData,
@@ -222,7 +222,7 @@ export async function markSelectSQL(
           hoverMessage: `Use primary keys to optimize queries.   \n${tablePrimKeys}`,
         });
       }
-    } else if (isPlsqlLoginData(loginData)) {
+    } else */ if (isPlsqlLoginData(loginData)) {
       const [tablePrimKeys, isPrimaryKeyAbsentExplicit, isValidExplicitSql] =
         await primKeysPlSqlHelper.checkExplicitPrimKeys(
           loginData,

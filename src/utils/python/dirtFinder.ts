@@ -7,7 +7,6 @@ export function markForLoopsPy(document: vscode.TextDocument) {
 
   let decorations: vscode.DecorationOptions[] = [];
   let text = document.getText();
-  // Parse the code with filbert and obtain the AST
   const regex = /for\s+(\w+)\s+in\s+range\(len\((\w+)\)\):/gmi;
   let match;
 

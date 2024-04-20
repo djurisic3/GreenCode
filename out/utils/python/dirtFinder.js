@@ -8,7 +8,6 @@ function markForLoopsPy(document) {
     }
     let decorations = [];
     let text = document.getText();
-    // Parse the code with filbert and obtain the AST
     const regex = /for\s+(\w+)\s+in\s+range\(len\((\w+)\)\):/gmi;
     let match;
     while ((match = regex.exec(text)) !== null) {

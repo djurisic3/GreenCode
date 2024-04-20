@@ -7,13 +7,16 @@ const pythonFinder = require("./utils/python/dirtFinder");
 const sqlFinder = require("./utils/helper/dirtFinder");
 const hover = require("./utils/python/hoverProvider");
 const pyCode = require("./utils/python/codeReplacement");
-const mysqlCode = require("./utils/mysql/codeReplacement");
+// import * as mysqlCode from "./utils/mysql/codeReplacement";
 const plsqlCode = require("./utils/plsql/codeReplacement");
 const loginManager_1 = require("./utils/plsql/loginManager");
 const loginManager_2 = require("./utils/mysql/loginManager");
-const hoverProvider_1 = require("./utils/mysql/hoverProvider");
-const hoverProvider_2 = require("./utils/plsql/hoverProvider");
-const sqlFileSearch = require("./utils/mysql/sqlFileSearch");
+// import {
+//   sqlImplicitJoinHover,
+//   sqlExplicitJoinHover,
+// } from "./utils/mysql/hoverProvider";
+const hoverProvider_1 = require("./utils/plsql/hoverProvider");
+// import * as sqlFileSearch from "./utils/mysql/sqlFileSearch";
 const criticalDirt = require("./utils/helper/dirtFinderCritical");
 const counter = require("./utils/helper/counter");
 const codeLocationStorage_1 = require("./utils/plsql/codeLocationStorage");
@@ -107,15 +110,25 @@ async function updateDecorationsSql() {
     }
     const selectStarDecoration = criticalDirt.findSelectAsteriskStatements(activeEditor.document);
     activeEditor.setDecorations(decorationTypeSqlCritical, selectStarDecoration);
-    let isLogged = false;
-    let decorations = await sqlFinder.markSelectSQL(activeEditor.document, isLogged, loginData);
-    if (!isUpdateDecorationsSqlRun) {
-        updateStatusBarMessages();
-    }
-    if (selectStarDecoration || decorations) {
-        isUpdateDecorationsSqlRun = true;
-    }
-    activeEditor.setDecorations(decorationTypeSql, decorations);
+    // Start the loading bar
+    await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Fetching and checking primary keys from the database...",
+        cancellable: false,
+    }, async (progress) => {
+        progress.report({ increment: -1 });
+        let isLogged = false;
+        let decorations = await sqlFinder.markSelectSQL(activeEditor.document, isLogged, loginData);
+        if (!isUpdateDecorationsSqlRun) {
+            updateStatusBarMessages();
+        }
+        if (selectStarDecoration || decorations) {
+            isUpdateDecorationsSqlRun = true;
+        }
+        activeEditor.setDecorations(decorationTypeSql, decorations);
+        progress.report({ increment: 100 });
+        await new Promise((resolve) => setTimeout(resolve, 800)); // Optional delay to ensure the user sees the completion
+    });
 }
 function deactivateDecorationsForLoop() {
     activeEditor = vscode.window.activeTextEditor;
@@ -163,10 +176,10 @@ async function activate(context) {
     let forHoverProvider = new hover.ForLoopHover();
     let csvHoverProvider = new hover.CsvHover();
     let miscHoverProvider = new hover.MiscHover();
-    let sqlImplicitHoverProvider = new hoverProvider_1.sqlImplicitJoinHover();
-    let sqlExplicitHoverProvider = new hoverProvider_1.sqlExplicitJoinHover();
-    let plsqlExplicitHoverProvider = new hoverProvider_2.sqlExplicitJoinHover();
-    let plsqlImplicitHoverProvider = new hoverProvider_2.sqlImplicitJoinHover();
+    // let sqlImplicitHoverProvider = new sqlImplicitJoinHover();
+    // let sqlExplicitHoverProvider = new sqlExplicitJoinHover();
+    let plsqlExplicitHoverProvider = new hoverProvider_1.sqlExplicitJoinHover();
+    let plsqlImplicitHoverProvider = new hoverProvider_1.sqlImplicitJoinHover();
     let disposableAI = vscode.commands.registerCommand("greencode.activateAI", async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -203,7 +216,7 @@ async function activate(context) {
         try {
             const prompt = `Given the SQL query: \n\n${sqlQuery}\n\nProvide optimization suggestions as code, focusing on green coding practices, without repeating the original query:`;
             const response = await openai.createCompletion({
-                model: "text-davinci-003",
+                model: "text-davinci-003", // Update as per the available models
                 prompt: prompt,
                 max_tokens: 150,
             });
@@ -220,30 +233,47 @@ async function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand("greencode.navigateToNextHighSeverity", navigateToNextHighSeverity));
     context.subscriptions.push(vscode.commands.registerCommand("greencode.navigateToNextMediumSeverity", navigateToNextMediumSeverity));
     context.subscriptions.push(statusBarMessageHigh, statusBarMessageMedium);
-    const disposableFindAllQueries = vscode.commands.registerCommand("greencode.findSqlQueries", async () => {
-        const options = {
-            canSelectFiles: false,
-            canSelectFolders: true,
-            canSelectMany: false,
-            openLabel: "Select Folder",
-        };
-        const folderUris = await vscode.window.showOpenDialog(options);
-        if (folderUris && folderUris.length > 0) {
-            const folderUri = folderUris[0];
-            const searchRecursively = await vscode.window.showQuickPick(["Yes", "No"], {
-                placeHolder: "Search for SQL queries recursively in all subfolders?",
-            });
-            const connectDB = await vscode.window.showQuickPick(["Yes", "No"], {
-                placeHolder: "Connect to database (for detailed analysis)?",
-            });
-            if (searchRecursively && connectDB) {
-                const results = await sqlFileSearch.searchFiles(folderUri, searchRecursively === "Yes", connectDB === "Yes");
-                if (results) {
-                    sqlFileSearch.showRecommendations(results.tableAndAlias, results.tablesAndColumns, results.readWriteCount, results.columnOccurrences, context);
-                }
-            }
-        }
-    });
+    // const disposableFindAllQueries = vscode.commands.registerCommand(
+    //   "greencode.findSqlQueries",
+    //   async () => {
+    //     const options: vscode.OpenDialogOptions = {
+    //       canSelectFiles: false,
+    //       canSelectFolders: true,
+    //       canSelectMany: false,
+    //       openLabel: "Select Folder",
+    //     };
+    //     const folderUris = await vscode.window.showOpenDialog(options);
+    //     if (folderUris && folderUris.length > 0) {
+    //       const folderUri = folderUris[0];
+    //       const searchRecursively = await vscode.window.showQuickPick(
+    //         ["Yes", "No"],
+    //         {
+    //           placeHolder:
+    //             "Search for SQL queries recursively in all subfolders?",
+    //         }
+    //       );
+    //       const connectDB = await vscode.window.showQuickPick(["Yes", "No"], {
+    //         placeHolder: "Connect to database (for detailed analysis)?",
+    //       });
+    //       if (searchRecursively && connectDB) {
+    //         const results = await sqlFileSearch.searchFiles(
+    //           folderUri,
+    //           searchRecursively === "Yes",
+    //           connectDB === "Yes"
+    //         );
+    //         if (results) {
+    //           sqlFileSearch.showRecommendations(
+    //             results.tableAndAlias,
+    //             results.tablesAndColumns,
+    //             results.readWriteCount,
+    //             results.columnOccurrences,
+    //             context
+    //           );
+    //         }
+    //       }
+    //     }
+    //   }
+    // );
     activeEditor = vscode.window.activeTextEditor;
     if (activeEditor?.document.languageId.includes("sql")) {
         serverType = await vscode.window.showQuickPick(["Oracle (PL/SQL)", "MySQL"], {
@@ -274,10 +304,13 @@ async function activate(context) {
                 context.subscriptions.push(vscode.languages.registerHoverProvider("sql", plsqlExplicitHoverProvider));
                 return;
             }
-        }
-        else if (serverType === "MySQL") {
-            context.subscriptions.push(vscode.languages.registerHoverProvider("sql", sqlImplicitHoverProvider));
-            context.subscriptions.push(vscode.languages.registerHoverProvider("sql", sqlExplicitHoverProvider));
+            // } else if (serverType === "MySQL") {
+            //   context.subscriptions.push(
+            //     vscode.languages.registerHoverProvider("sql", sqlImplicitHoverProvider)
+            //   );
+            // context.subscriptions.push(
+            //   vscode.languages.registerHoverProvider("sql", sqlExplicitHoverProvider)
+            // );
             loginData = await (0, loginManager_2.getLoginDataMySql)();
             if (!loginData || loginData === undefined) {
                 await vscode.window
@@ -291,7 +324,7 @@ async function activate(context) {
             }
         }
     }
-    context.subscriptions.push(disposableFindAllQueries);
+    // context.subscriptions.push(disposableFindAllQueries);
     context.subscriptions.push(vscode.languages.registerHoverProvider("python", forHoverProvider));
     context.subscriptions.push(vscode.languages.registerHoverProvider("python", csvHoverProvider));
     context.subscriptions.push(vscode.languages.registerHoverProvider("python", miscHoverProvider));
@@ -325,15 +358,17 @@ async function activate(context) {
         }
         else if (miscHoverProvider.currentMisc !== undefined) {
             pyCode.miscellaneousReplacement(miscHoverProvider);
-        }
-        else if (sqlImplicitHoverProvider.currentImplicitSql !== undefined &&
-            serverType === "MySQL") {
-            mysqlCode.sqlImplicitJoinHoverReplacement(sqlImplicitHoverProvider);
-        }
-        else if (sqlExplicitHoverProvider.currentExplicitSql !== undefined &&
-            serverType === "MySQL") {
-            mysqlCode.sqlExplicitJoinHoverReplacement(sqlExplicitHoverProvider);
-        }
+        } /*else if (
+          sqlImplicitHoverProvider.currentImplicitSql !== undefined &&
+          serverType === "MySQL"
+        ) {
+          mysqlCode.sqlImplicitJoinHoverReplacement(sqlImplicitHoverProvider);
+        } else if (
+          sqlExplicitHoverProvider.currentExplicitSql !== undefined &&
+          serverType === "MySQL"
+        ) {
+          mysqlCode.sqlExplicitJoinHoverReplacement(sqlExplicitHoverProvider);
+        } */
         else if (plsqlImplicitHoverProvider.currentImplicitSql !== undefined &&
             serverType === "Oracle (PL/SQL)") {
             plsqlCode.sqlImplicitJoinHoverReplacement(plsqlImplicitHoverProvider);
@@ -347,12 +382,12 @@ async function activate(context) {
             pyCode.forCursorReplacement(forHoverProvider);
             pyCode.miscellaneousReplacement(miscHoverProvider);
             if (serverType === "MySQL") {
-                mysqlCode.sqlImplicitJoinCursorReplacement(sqlImplicitHoverProvider);
-                mysqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
+                // mysqlCode.sqlImplicitJoinCursorReplacement(sqlImplicitHoverProvider);
+                // mysqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
             }
             else if (serverType === "Oracle (PL/SQL)") {
-                plsqlCode.sqlExplicitJoinCursorReplacement(sqlExplicitHoverProvider);
-                plsqlCode.sqlImplicitJoinCursorReplacement(sqlImplicitHoverProvider);
+                plsqlCode.sqlExplicitJoinCursorReplacement(plsqlExplicitHoverProvider);
+                plsqlCode.sqlImplicitJoinCursorReplacement(plsqlImplicitHoverProvider);
             }
         }
     });

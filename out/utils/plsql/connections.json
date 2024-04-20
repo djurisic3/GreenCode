@@ -1,6 +1,10 @@
 [
   {
-    "connectionString": "localhost",
-    "label": "local"
+    "connectionString": "system",
+    "label": "dario"
+  },
+  {
+    "connectionString": "lasda",
+    "label": "ld"
   }
 ]

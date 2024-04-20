@@ -40,7 +40,9 @@ async function checkImplicitPrimKeys(credentials, implicitJoinMatch, matchWhere)
     // Create a string of table names and their corresponding primary keys
     const tableInfo = processedTableNames
         .map((tableName) => {
-        const primaryKeys = primaryKeyMap[tableName.toLocaleUpperCase()] ?? ["unknown"];
+        const primaryKeys = primaryKeyMap[tableName.toLocaleUpperCase()] ?? [
+            "unknown",
+        ];
         return `${tableName}: ${primaryKeys.join(", ")}`;
     })
         .join("   \n");
@@ -110,7 +112,9 @@ async function checkExplicitPrimKeys(credentials, matchExplicitJoin, matchJoinOn
     // Create a string of table names and their corresponding primary keys
     const tableInfo = processedTableNames
         .map((tableName) => {
-        const primaryKeys = primaryKeyMap[tableName.toLocaleUpperCase()] ?? ["unknown"];
+        const primaryKeys = primaryKeyMap[tableName.toLocaleUpperCase()] ?? [
+            "unknown",
+        ];
         return `${tableName}: ${primaryKeys.join(", ")}`;
     })
         .join("   \n");
